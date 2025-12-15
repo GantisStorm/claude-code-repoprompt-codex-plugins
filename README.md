@@ -39,21 +39,6 @@ A **pluggable multi-agent planning framework** for Claude Code. Swap planning en
 
 ---
 
-## Table of Contents
-
-- [Why Pluggable Planning?](#why-pluggable-planning)
-- [Execution Patterns](#execution-patterns)
-- [Planning Engines](#planning-engines)
-- [Agent Architecture](#agent-architecture)
-- [Plugin Matrix](#plugin-matrix)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Choosing the Right Plugin](#choosing-the-right-plugin)
-- [Requirements](#requirements)
-- [Troubleshooting](#troubleshooting)
-
----
-
 ## Why Pluggable Planning?
 
 Different planning engines excel at different tasks:
@@ -291,19 +276,6 @@ All plugins share the **same four agent types**. Only the planner implementation
 
 ---
 
-## Plugin Matrix
-
-| Plugin | Pattern | Planning Engine | MCP Required | Plan Flow |
-|--------|---------|-----------------|--------------|-----------|
-| **pair-pipeline** | Pipeline | Claude Code | None | Direct |
-| **pair-swarm** | Swarm | Claude Code | None | Direct |
-| **repoprompt-pair-pipeline** | Pipeline | RepoPrompt | RepoPrompt | MCP Fetch |
-| **repoprompt-swarm** | Swarm | RepoPrompt | RepoPrompt | MCP Fetch |
-| **codex-pair-pipeline** | Pipeline | Codex gpt-5.2 | Codex | Direct |
-| **codex-swarm** | Swarm | Codex gpt-5.2 | Codex | Direct |
-
----
-
 ## Installation
 
 ### Step 1: Add the Marketplace
@@ -379,55 +351,6 @@ Or enable in `.claude/settings.local.json`:
 /repoprompt-swarm:code chat_id:[chat_id from /plan]
 /codex-swarm:code plan:[paste plan from above]
 ```
-
----
-
-## Choosing the Right Plugin
-
-### Decision Tree
-
-```
-Do you need iterative discovery with checkpoints?
-│
-├─► YES ─► Which planning engine?
-│          │
-│          ├─► RepoPrompt (best context) ─► repoprompt-pair-pipeline
-│          ├─► Codex (gpt-5.2 reasoning) ─► codex-pair-pipeline
-│          └─► None (standalone) ─────────► pair-pipeline
-│
-└─► NO ──► Which planning engine?
-           │
-           ├─► RepoPrompt ─► repoprompt-swarm
-           ├─► Codex ──────► codex-swarm
-           └─► None ───────► pair-swarm
-```
-
-### Quick Reference
-
-| Use Case | Recommended |
-|----------|-------------|
-| Exploring unfamiliar codebase | `repoprompt-pair-pipeline` or `codex-pair-pipeline` |
-| Complex architectural changes | `codex-pair-pipeline` (gpt-5.2 reasoning) |
-| Best context management | `repoprompt-pair-pipeline` |
-| Well-defined task, fast execution | `pair-swarm` (no MCP overhead) |
-| No external dependencies | `pair-pipeline` or `pair-swarm` |
-| Already using RepoPrompt | `repoprompt-*` variants |
-
-### Tradeoffs
-
-| Consideration | Pipeline | Swarm |
-|---------------|----------|-------|
-| User control | High (checkpoints) | Low (review plan only) |
-| Speed | Slower (iterative) | Faster (one-shot) |
-| Context quality | Higher (refined) | Fixed (initial gather) |
-| Workflow | Single command | Two commands |
-
-| Consideration | pair-* | repoprompt-* | codex-* |
-|---------------|--------|--------------|---------|
-| Dependencies | None | RepoPrompt app | Codex CLI + API key |
-| Planning quality | Good | Better | Best (gpt-5.2) |
-| Speed | Fastest | Medium | Slowest (30s-5min) |
-| Resume capability | Context-based | chat_id-based | Limited |
 
 ---
 
@@ -546,19 +469,3 @@ Solutions:
 - Fix issues and use `command:start-resume`
 
 ---
-
-## Contributing
-
-Contributions are welcome! Please:
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test with Claude Code
-5. Submit a pull request
-
----
-
-## License
-
-MIT License - See LICENSE file for details.
