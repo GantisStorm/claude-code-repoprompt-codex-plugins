@@ -1,0 +1,8 @@
+{
+  "name": "pair-swarm",
+  "description": "One-shot swarm commands for planning and coding. No iterative loops - just parallel agent execution.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Pair Swarm Contributors"
+  }
+}
