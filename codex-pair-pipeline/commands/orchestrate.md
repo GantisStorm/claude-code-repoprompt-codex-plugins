@@ -37,24 +37,20 @@ Parse `$ARGUMENTS` according to this pattern table:
 | `task:[description] \| research:[query]` | Start discovery with initial research |
 | `command:start \| task:[description]` | Explicit discovery task |
 | `command:start \| task:[description] \| research:[query]` | Discovery with research |
-| `command:start-resume \| task:[description]` | Discovery loop, then continue in existing Codex session using `last_session_id` |
-| `command:start-resume \| task:[description] \| research:[query]` | Discovery with initial research, then continue in existing Codex session |
-| `command:fetch \| task:[session_id]` | Skip to execution using existing plan (bypasses discovery and planning) |
+| `command:start-resume \| task:[description]` | Discovery loop, then create new plan (builds on previous context) |
+| `command:start-resume \| task:[description] \| research:[query]` | Discovery with research, then create new plan |
 
 **Default behavior:** If no `command:` prefix is provided, default to `command:start`.
 
 **State Management:** Maintain these in conversation memory:
-- `last_session_id` - Set after planning agent returns, used automatically for `command:start-resume`
 - `last_plan` - The full architectural plan text from planning agent
 - `context_package` - Accumulated context (CODE_CONTEXT, EXTERNAL_CONTEXT, Q&A)
 
-**command:fetch Mode:** When the user provides `command:fetch | task:[session_id]`, skip directly to Phase 1a in "fetch mode" - this fetches an existing architectural plan without any discovery or synthesis.
+**Note:** We cannot fetch plans from Codex sessions, so plans are passed directly from planners to coders.
 
 ## Process
 
 ### Phase 0: Iterative Discovery Loop
-
-**Skip this phase entirely for `command:fetch` - jump directly to Phase 1.**
 
 This mode is **iterative and user-controlled**. Users build up their context package incrementally. Scout agents identify clarification questions during exploration, and you present these to the user at checkpoints.
 
@@ -203,16 +199,8 @@ The context package accumulates:
 |---------|-----------|----------------|
 | `command:start` | Full loop + checkpoints | planner-start |
 | `command:start-resume` | Full loop + checkpoints | planner-start-resume |
-| `command:fetch` | None | planner-fetch |
 
 Use the appropriate planning agent based on the operation type:
-
-**For `command:fetch` mode** (skip discovery, use existing plan):
-
-```
-Task codex-pair-pipeline:planner-fetch
-  prompt: "session_id: [id from user]"
-```
 
 **For `command:start` task:**
 
@@ -225,22 +213,26 @@ Task codex-pair-pipeline:planner-start
 
 ```
 Task codex-pair-pipeline:planner-start-resume
-  prompt: "session_id: [last_session_id] | message: [assembled context package]"
+  prompt: "instructions: [assembled context package]"
 ```
 
-Store the returned `session_id` as `last_session_id` and `plan` as `last_plan`.
+Store the returned `plan` as `last_plan`. The planner returns the FULL plan with per-file instructions under `### [filename] [action]` headers.
 
 ### Phase 2: Execution
 
-Spawn all coders in parallel using a single message with multiple Task calls:
+Parse the plan to extract per-file instructions. The plan contains `### [filename] [action]` headers with instructions for each file.
+
+Spawn all coders in parallel using a single message with multiple Task calls, passing the per-file instructions directly:
 
 ```
 Task codex-pair-pipeline:plan-coder
-  prompt: "session_id: [id] | target_file: [path1] | action: edit"
+  prompt: "target_file: [path1] | action: edit | plan: [instructions for path1 from plan]"
 
 Task codex-pair-pipeline:plan-coder
-  prompt: "session_id: [id] | target_file: [path2] | action: create"
+  prompt: "target_file: [path2] | action: create | plan: [instructions for path2 from plan]"
 ```
+
+**Plan extraction:** For each file, extract the content under its `### [filename] [action]` header until the next header or end of plan.
 
 ### Phase 3: Review
 
@@ -262,8 +254,6 @@ Summary: [brief description of what was accomplished]
 
 To continue: command:start-resume | task:[follow-up request]
 ```
-
-Do not include the session_id in the completion message. The orchestrator stores it internally and uses it automatically for `command:start-resume`.
 
 ---
 

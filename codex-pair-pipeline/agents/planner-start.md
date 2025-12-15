@@ -90,8 +90,6 @@ Full parameter list:
 - `model`: "gpt-5.2" (recommended for architectural planning)
 - `reasoningEffort`: "high" (use high for complex architectural tasks)
 
-**Note:** The tuannvm/codex-mcp-server returns a `sessionId` in the response that can be used for follow-up calls.
-
 **Prompt Structure:**
 
 Include the Architect system prompt as a preamble, followed by CODE_CONTEXT and your architectural narrative:
@@ -120,6 +118,11 @@ For each change:
 You may include short code snippets to illustrate specific patterns, signatures, or structures, but do not implement the full solution.
 
 Focus solely on the technical implementation plan - exclude testing, validation, and deployment considerations unless they directly impact the architecture.
+
+IMPORTANT: Format your output with clear sections:
+- files_to_edit: [list of existing files to modify]
+- files_to_create: [list of new files]
+- Per-file instructions under ### [filename] [action] headers
 </SYSTEM>
 
 <CODE_CONTEXT>
@@ -139,9 +142,9 @@ Focus solely on the technical implementation plan - exclude testing, validation,
 </USER_INSTRUCTIONS>
 ```
 
-### 4. Extract Results
+### 4. Extract and Return Full Plan
 
-From response, get `sessionId` and parse file lists from the returned architectural plan.
+Parse the Codex response and return the FULL plan text. Extract file lists from the plan.
 
 Look for:
 - **Files to edit**: Files mentioned with "modify", "update", "change", "edit", or marked `[edit]`
@@ -149,28 +152,48 @@ Look for:
 
 ## Output
 
+Return this exact structure with the FULL plan text:
+
 ```
-session_id: [from Codex MCP response - look for sessionId in response]
-status: SUCCESS | FAILED
-plan: [the full architectural plan text from Codex response]
+status: SUCCESS
 files_to_edit:
-  - path/to/existing.ts
+  - path/to/existing1.ts
+  - path/to/existing2.ts
 files_to_create:
-  - path/to/new.ts
+  - path/to/new1.ts
+
+## Implementation Plan
+
+[FULL PLAN TEXT FROM CODEX - include all per-file instructions]
+
+### path/to/existing1.ts [edit]
+[Instructions from Codex for this file]
+
+### path/to/existing2.ts [edit]
+[Instructions from Codex for this file]
+
+### path/to/new1.ts [create]
+[Instructions from Codex for this file]
 ```
+
+**IMPORTANT**: The orchestrator cannot fetch plans from Codex sessions. You MUST return the full plan text with per-file instructions so the orchestrator can distribute them to coders.
 
 ## Error Handling
 
 **MCP tool fails:**
 ```
-session_id: none
 status: FAILED
 error: [error message from MCP]
 ```
 
 **Codex times out:**
 ```
-session_id: none
 status: FAILED
 error: Codex MCP timed out - try with a simpler task or increase timeout
+```
+
+**Insufficient context:**
+```
+status: FAILED
+error: Insufficient context to create plan - missing [describe what's missing]
 ```

@@ -1,10 +1,10 @@
 ---
 description: Execute a Codex plan by spawning a swarm of parallel plan-coders
-argument-hint: session_id:
-allowed-tools: Task, mcp__codex-cli__codex
+argument-hint: plan:
+allowed-tools: Task
 ---
 
-You are the Code orchestrator. You fetch a plan from Codex and spawn plan-coders in parallel to implement all files. One-shot execution with swarm parallelism.
+You are the Code orchestrator. You receive a plan and spawn plan-coders in parallel to implement all files. One-shot execution with swarm parallelism.
 
 ## Core Principles
 
@@ -18,45 +18,44 @@ You are the Code orchestrator. You fetch a plan from Codex and spawn plan-coders
 Parse `$ARGUMENTS`:
 
 ```
-session_id: [Codex session ID containing the plan]
+plan: [Full implementation plan from /codex-swarm:plan]
 ```
+
+The plan contains per-file instructions under `### [filename] [action]` headers.
 
 ## Process
 
-### Step 1: Fetch Plan from Codex
+### Step 1: Parse Plan
 
-Call `mcp__codex-cli__codex` with:
-- `sessionId`: the provided session_id (enables conversation continuation)
-- `prompt`: "Please provide a summary of the implementation plan you created, listing all files that need to be edited and all files that need to be created. Format as:\n\nFiles to edit:\n- path/to/file1.ts\n- path/to/file2.ts\n\nFiles to create:\n- path/to/newfile.ts"
+Extract from the plan:
+1. **files_to_edit** - Files marked with `[edit]` action
+2. **files_to_create** - Files marked with `[create]` action
+3. **Per-file instructions** - The content under each `### [filename] [action]` header
 
-### Step 2: Parse Plan
-
-From the Codex response, extract:
-1. **files_to_edit** - List of existing files to modify
-2. **files_to_create** - List of new files to create
-
-### Step 3: Spawn Coders in Parallel
+### Step 2: Spawn Coders in Parallel
 
 **IMPORTANT**: Spawn ALL coders in a single message with multiple Task calls.
 
-For each file in the plan:
+For each file in the plan, extract the per-file instructions and pass them directly:
 
 ```
 Task codex-swarm:plan-coder
-  prompt: "session_id: [session_id] | target_file: [path1] | action: edit"
+  prompt: "target_file: [path1] | action: edit | plan: [instructions for path1 from plan]"
 
 Task codex-swarm:plan-coder
-  prompt: "session_id: [session_id] | target_file: [path2] | action: edit"
+  prompt: "target_file: [path2] | action: edit | plan: [instructions for path2 from plan]"
 
 Task codex-swarm:plan-coder
-  prompt: "session_id: [session_id] | target_file: [path3] | action: create"
+  prompt: "target_file: [path3] | action: create | plan: [instructions for path3 from plan]"
 ```
 
 **Action mapping:**
-- Files from `files_to_edit` -> `action: edit`
-- Files from `files_to_create` -> `action: create`
+- Files marked `[edit]` -> `action: edit`
+- Files marked `[create]` -> `action: create`
 
-### Step 4: Collect Results
+**Plan extraction:** For each file, extract the content under its `### [filename] [action]` header until the next header or end of plan.
+
+### Step 3: Collect Results
 
 Wait for all coders to complete. Each returns:
 - `file`: target file path
@@ -66,7 +65,7 @@ Wait for all coders to complete. Each returns:
 - `summary`: what was done
 - `issues`: (if BLOCKED) error details
 
-### Step 5: Report Results
+### Step 4: Report Results
 
 Display results to the user:
 
@@ -94,21 +93,18 @@ Display results to the user:
 
 ## Error Handling
 
-**MCP fetch failed:**
-```
-ERROR: Could not fetch plan from Codex.
-- Check that session_id is correct
-- Verify Codex MCP server is installed: claude mcp list
-- The session may have expired (24h limit)
-```
-
 **Plan parsing failed:**
 ```
-ERROR: Could not parse plan. Expected the plan to contain file lists.
+ERROR: Could not parse plan. Expected the plan to contain per-file instructions under ### [filename] [action] headers.
 ```
 
 **Some coders blocked:**
 Report successes and failures separately. Suggest user review blocked files and re-run with fixes.
+
+**No files in plan:**
+```
+ERROR: No files found in plan. Ensure the plan contains ### [filename] [edit] or ### [filename] [create] headers.
+```
 
 ---
 

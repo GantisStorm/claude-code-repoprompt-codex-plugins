@@ -35,13 +35,13 @@
     {
       "name": "codex-pair-pipeline",
       "source": "./codex-pair-pipeline",
-      "description": "Multi-agent orchestration for complex coding tasks with Codex MCP (tuannvm/codex-mcp-server). Scouts gather raw context, planners synthesize architectural narrative prompts with gpt-5.2. Uses session continuation for multi-turn planning. Iterative discovery with user checkpoints and parallel execution.",
+      "description": "Multi-agent orchestration for complex coding tasks with Codex MCP (tuannvm/codex-mcp-server). Scouts gather raw context, planners synthesize architectural narrative prompts with gpt-5.2. Returns full plan with per-file instructions. Iterative discovery with user checkpoints and parallel execution.",
       "version": "1.2.0"
     },
     {
       "name": "codex-swarm",
       "source": "./codex-swarm",
-      "description": "One-shot swarm commands with Codex MCP planning (tuannvm/codex-mcp-server). /plan spawns parallel scouts, then Codex creates architectural plans using gpt-5.2. /code spawns parallel coders that fetch from Codex via sessionId. Fast parallel execution with session support.",
+      "description": "One-shot swarm commands with Codex MCP planning (tuannvm/codex-mcp-server). /plan spawns parallel scouts, then Codex creates architectural plans using gpt-5.2 and returns full plan. /code parses plan and spawns parallel coders with direct instructions. Fast parallel execution.",
       "version": "1.2.0"
     }
   ]

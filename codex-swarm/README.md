@@ -27,19 +27,19 @@ Spawns code-scout and doc-scout in parallel, then uses Codex with the Architect 
 /codex-swarm:plan task:Add OAuth2 login | research:Google OAuth2 Node.js
 ```
 
-**Flow:** code-scout + doc-scout (parallel) -> Codex planner (gpt-5.2) -> session_id output
+**Flow:** code-scout + doc-scout (parallel) -> Codex planner (gpt-5.2) -> full plan output
 
-**Output:** A session_id referencing the Codex plan, ready for `/code`.
+**Output:** A complete implementation plan with per-file instructions, ready for `/code`.
 
-### /code - Execute Codex Plan
+### /code - Execute Implementation Plan
 
-Takes a session_id and spawns plan-coders in parallel to implement all files. Coders fetch their instructions from Codex.
+Takes the plan from `/plan` and spawns plan-coders in parallel to implement all files. Each coder receives its instructions directly.
 
 ```bash
-/codex-swarm:code session_id:[session_id from /plan output]
+/codex-swarm:code plan:[paste plan from /plan output]
 ```
 
-**Flow:** Fetch plan from Codex -> spawn all plan-coders (parallel) -> collect results
+**Flow:** Parse plan -> spawn all plan-coders (parallel) -> collect results
 
 **Output:** Status table showing which files were completed/blocked.
 
@@ -50,14 +50,14 @@ Takes a session_id and spawns plan-coders in parallel to implement all files. Co
      |                                      |
      v                                      v
 +==============+                    +================+
-| Parse Input  |                    | Fetch Plan     |
-| task:        |                    | from Codex     |
-| research:    |                    | (session_id)   |
-+======+======+                    +========+=======+
-       |                                    |
-       v                                    v
-+------+------+                    +--------+--------+
-|             |                    | Parse file lists|
+| Parse Input  |                    | Parse Plan     |
+| task:        |                    | (plan:)        |
+| research:    |                    +========+=======+
++======+======+                             |
+       |                                    v
+       v                           +--------+--------+
++------+------+                    | Extract per-file|
+|             |                    | instructions    |
 v             v                    +--------+--------+
 +----------+ +----------+                   |
 |code-scout| |doc-scout |                   v
@@ -67,9 +67,9 @@ v             v                    +--------+--------+
      v            v         +-----------+    +-----------+
   CODE_CONTEXT  EXTERNAL_   |plan-coder |    |plan-coder |
      |          CONTEXT     |  file1    |    |  file2    |
-     +-----+------+         | (fetches  |    | (fetches  |
-           |                |  from     |    |  from     |
-           v                |  Codex)   |    |  Codex)   |
+     +-----+------+         | (receives |    | (receives |
+           |                |  plan     |    |  plan     |
+           v                |  directly)|    |  directly)|
      +----------+           +-----+-----+    +-----+-----+
      | planner  |                 |                |
      | (uses    |                 v                v
@@ -80,7 +80,7 @@ v             v                    +--------+--------+
           |                               v
           v                       +================+
   +=================+             | Results Table  |
-  | SESSION_ID      |             +================+
+  | FULL PLAN       |             +================+
   | + file lists    |
   +=================+
 ```
@@ -91,16 +91,14 @@ v             v                    +--------+--------+
 |-------|---------|-------|--------|
 | code-scout | Investigate codebase | Glob, Grep, Read, Bash | Raw CODE_CONTEXT |
 | doc-scout | Fetch external docs | Any research tools | Raw EXTERNAL_CONTEXT |
-| planner | Synthesize context, send to Codex | mcp__codex-cli__codex | session_id + file lists |
-| plan-coder | Implement single file (fetches from Codex) | Read, Edit, Write, Glob, Grep, Bash, mcp__codex-cli__codex | Status + verified |
+| planner | Synthesize context, send to Codex | mcp__codex-cli__codex | Full plan + file lists |
+| plan-coder | Implement single file | Read, Edit, Write, Glob, Grep, Bash | Status + verified |
 
-## Session Continuation
+## Plan Distribution
 
-The tuannvm/codex-mcp-server provides proper session support (unlike the official server which has [Issue #3712](https://github.com/openai/codex/issues/3712)):
+Plans are passed directly from `/plan` to `/code` - the orchestrator distributes per-file instructions to coders. This avoids session continuation issues and ensures each coder has exactly the instructions it needs.
 
-- **sessionId** returned in responses for follow-up calls
-- **24-hour session persistence**
-- Use `listSessions` tool to see active sessions
+The tuannvm/codex-mcp-server is still required for the planner to communicate with Codex, but coders don't need MCP access.
 
 ## Tips
 
@@ -110,9 +108,9 @@ The tuannvm/codex-mcp-server provides proper session support (unlike the officia
 - For bugs, describe symptoms: "Login button doesn't respond on mobile Safari"
 
 **Using /code:**
-- The plan is stored in Codex - just pass the session_id
-- If some files are BLOCKED, fix issues and re-run `/code` with the same session_id
-- Each coder fetches its instructions from Codex independently
+- Copy the Implementation Plan section from `/plan` output
+- If some files are BLOCKED, fix issues and re-run `/plan` with a modified task
+- Each coder receives its instructions directly - no MCP needed
 
 **When things go wrong:**
 - BLOCKED status includes error details - read them

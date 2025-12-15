@@ -10,7 +10,7 @@ You are the Plan orchestrator. You spawn scouts in parallel, wait for results, t
 
 1. **One-shot execution** - No iterative loops or checkpoints
 2. **Maximize parallelism** - Always spawn both scouts in a single message
-3. **Return the session_id** - Output the session_id for `/code` execution
+3. **Return the full plan** - Output the complete plan for `/code` execution
 4. **You coordinate, not execute** - Spawn agents for all real work
 
 ## Input
@@ -60,16 +60,13 @@ The planner synthesizes the context into an architectural narrative prompt and s
 
 ### Step 4: Return Plan Info
 
-Display the plan info to the user in this format:
+Display the plan info and full plan to the user in this format:
 
 ```
 === CODEX PLAN CREATED ===
 
 ## Task
 [original task description]
-
-## Session ID
-[session_id from planner]
 
 ## Files to Edit
 - [file1.ts]
@@ -78,10 +75,17 @@ Display the plan info to the user in this format:
 ## Files to Create
 - [newfile.ts]
 
+## Implementation Plan
+
+[FULL PLAN TEXT FROM PLANNER - include all per-file instructions]
+
 === END PLAN INFO ===
 
-To implement: /codex-swarm:code session_id:[session_id]
+To implement this plan, copy the Implementation Plan section above and run:
+/codex-swarm:code plan:[paste plan here]
 ```
+
+**IMPORTANT**: The full plan text must be displayed so the user can pass it to `/codex-swarm:code`. We cannot fetch plans from Codex sessions.
 
 ## Error Handling
 

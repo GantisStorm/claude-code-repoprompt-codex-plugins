@@ -304,7 +304,7 @@ Iterative discovery with user checkpoints. Codex creates detailed architectural 
 
 ### Requirements
 
-- **Codex MCP** - Install with `npm install -g @anthropic/codex`, run with `codex mcp-server`
+- **Codex MCP** - Install with `claude mcp add codex-cli -- npx -y codex-mcp-server`
 
 ### Commands
 
@@ -315,11 +315,8 @@ Iterative discovery with user checkpoints. Codex creates detailed architectural 
 # Start with research (scouts run in parallel)
 /codex-pair-pipeline:orchestrate command:start | task:Add OAuth2 login | research:Google OAuth2 best practices
 
-# Resume in same Codex conversation
+# Continue with new plan (builds on previous context)
 /codex-pair-pipeline:orchestrate command:start-resume | task:Add password reset flow
-
-# Execute existing plan by conversation_id
-/codex-pair-pipeline:orchestrate command:fetch | task:conv-abc123-xyz
 ```
 
 ### Flow
@@ -334,10 +331,10 @@ Discovery Loop (with checkpoints)
     planner-start (Codex with gpt-5.2 + Architect prompt)
          |
          v
-    conversation_id + file_lists
+    Full plan + file_lists
          |
          v
-    plan-coders (fetch from Codex, parallel) --> Results
+    plan-coders (receive plan directly, parallel) --> Results
 ```
 
 ### Architect System Prompt
@@ -375,10 +372,9 @@ Focus solely on the technical implementation plan - exclude testing, validation,
 |-------|---------|-------|--------|
 | code-scout | Investigate codebase | Glob, Grep, Read, Bash | CODE_CONTEXT |
 | doc-scout | Fetch external docs | Research tools | EXTERNAL_CONTEXT |
-| planner-start | Create plan via Codex | mcp__codex__codex | conversation_id + file lists |
-| planner-start-resume | Continue existing conversation | mcp__codex__codex-reply | conversation_id + file lists |
-| planner-fetch | Fetch existing plan | mcp__codex__codex-reply | conversation_id + file lists |
-| plan-coder | Implement file (fetches from Codex) | Edit, Write, codex-reply | Status |
+| planner-start | Create plan via Codex | mcp__codex-cli__codex | Full plan + file lists |
+| planner-start-resume | Create new plan via Codex | mcp__codex-cli__codex | Full plan + file lists |
+| plan-coder | Implement file (receives plan directly) | Edit, Write | Status |
 
 ---
 
@@ -390,7 +386,7 @@ Fast parallel execution with Codex's architectural planning capabilities.
 
 ### Requirements
 
-- **Codex MCP** - Install with `npm install -g @anthropic/codex`, run with `codex mcp-server`
+- **Codex MCP** - Install with `claude mcp add codex-cli -- npx -y codex-mcp-server`
 
 ### Commands
 
@@ -399,7 +395,7 @@ Fast parallel execution with Codex's architectural planning capabilities.
 /codex-swarm:plan task:Add user authentication with JWT tokens | research:JWT best practices Node.js
 
 # Execute the plan
-/codex-swarm:code conversation_id:[conversation_id from /plan output]
+/codex-swarm:code plan:[paste plan from /plan output]
 ```
 
 ### Flow
@@ -408,14 +404,14 @@ Fast parallel execution with Codex's architectural planning capabilities.
 /plan                              /code
   |                                  |
   v                                  v
-code-scout + doc-scout        Fetch plan from Codex
+code-scout + doc-scout        Parse plan
 (parallel)                          |
   |                                  v
   v                           plan-coders (parallel)
 planner (Codex gpt-5.2)             |
   |                                  v
   v                            Results Table
-conversation_id + file_lists
+Full plan + file_lists
 ```
 
 ### Agents
@@ -424,8 +420,8 @@ conversation_id + file_lists
 |-------|---------|-------|--------|
 | code-scout | Investigate codebase | Glob, Grep, Read, Bash | CODE_CONTEXT |
 | doc-scout | Fetch external docs | Research tools | EXTERNAL_CONTEXT |
-| planner | Create plan via Codex | mcp__codex__codex | conversation_id + file lists |
-| plan-coder | Implement file (fetches from Codex) | Edit, Write, codex-reply | Status |
+| planner | Create plan via Codex | mcp__codex-cli__codex | Full plan + file lists |
+| plan-coder | Implement file (receives plan directly) | Edit, Write | Status |
 
 ---
 
