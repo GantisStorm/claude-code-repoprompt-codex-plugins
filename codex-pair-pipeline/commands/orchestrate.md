@@ -37,18 +37,18 @@ Parse `$ARGUMENTS` according to this pattern table:
 | `task:[description] \| research:[query]` | Start discovery with initial research |
 | `command:start \| task:[description]` | Explicit discovery task |
 | `command:start \| task:[description] \| research:[query]` | Discovery with research |
-| `command:start-resume \| task:[description]` | Discovery loop, then continue in existing Codex conversation using `last_conversation_id` |
-| `command:start-resume \| task:[description] \| research:[query]` | Discovery with initial research, then continue in existing Codex conversation |
-| `command:fetch \| task:[conversation_id]` | Skip to execution using existing plan (bypasses discovery and planning) |
+| `command:start-resume \| task:[description]` | Discovery loop, then continue in existing Codex session using `last_session_id` |
+| `command:start-resume \| task:[description] \| research:[query]` | Discovery with initial research, then continue in existing Codex session |
+| `command:fetch \| task:[session_id]` | Skip to execution using existing plan (bypasses discovery and planning) |
 
 **Default behavior:** If no `command:` prefix is provided, default to `command:start`.
 
 **State Management:** Maintain these in conversation memory:
-- `last_conversation_id` - Set after planning agent returns, used automatically for `command:start-resume`
+- `last_session_id` - Set after planning agent returns, used automatically for `command:start-resume`
 - `last_plan` - The full architectural plan text from planning agent
 - `context_package` - Accumulated context (CODE_CONTEXT, EXTERNAL_CONTEXT, Q&A)
 
-**command:fetch Mode:** When the user provides `command:fetch | task:[conversation_id]`, skip directly to Phase 1a in "fetch mode" - this fetches an existing architectural plan without any discovery or synthesis.
+**command:fetch Mode:** When the user provides `command:fetch | task:[session_id]`, skip directly to Phase 1a in "fetch mode" - this fetches an existing architectural plan without any discovery or synthesis.
 
 ## Process
 
@@ -211,7 +211,7 @@ Use the appropriate planning agent based on the operation type:
 
 ```
 Task codex-pair-pipeline:planner-fetch
-  prompt: "conversation_id: [id from user]"
+  prompt: "session_id: [id from user]"
 ```
 
 **For `command:start` task:**
@@ -225,10 +225,10 @@ Task codex-pair-pipeline:planner-start
 
 ```
 Task codex-pair-pipeline:planner-start-resume
-  prompt: "conversation_id: [last_conversation_id] | message: [assembled context package]"
+  prompt: "session_id: [last_session_id] | message: [assembled context package]"
 ```
 
-Store the returned `conversation_id` as `last_conversation_id` and `plan` as `last_plan`.
+Store the returned `session_id` as `last_session_id` and `plan` as `last_plan`.
 
 ### Phase 2: Execution
 
@@ -236,10 +236,10 @@ Spawn all coders in parallel using a single message with multiple Task calls:
 
 ```
 Task codex-pair-pipeline:plan-coder
-  prompt: "conversation_id: [id] | target_file: [path1] | action: edit"
+  prompt: "session_id: [id] | target_file: [path1] | action: edit"
 
 Task codex-pair-pipeline:plan-coder
-  prompt: "conversation_id: [id] | target_file: [path2] | action: create"
+  prompt: "session_id: [id] | target_file: [path2] | action: create"
 ```
 
 ### Phase 3: Review
@@ -263,7 +263,7 @@ Summary: [brief description of what was accomplished]
 To continue: command:start-resume | task:[follow-up request]
 ```
 
-Do not include the conversation_id in the completion message. The orchestrator stores it internally and uses it automatically for `command:start-resume`.
+Do not include the session_id in the completion message. The orchestrator stores it internally and uses it automatically for `command:start-resume`.
 
 ---
 

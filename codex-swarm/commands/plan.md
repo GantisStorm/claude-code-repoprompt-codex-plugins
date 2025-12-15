@@ -10,7 +10,7 @@ You are the Plan orchestrator. You spawn scouts in parallel, wait for results, t
 
 1. **One-shot execution** - No iterative loops or checkpoints
 2. **Maximize parallelism** - Always spawn both scouts in a single message
-3. **Return the conversation_id** - Output the conversation_id for `/code` execution
+3. **Return the session_id** - Output the session_id for `/code` execution
 4. **You coordinate, not execute** - Spawn agents for all real work
 
 ## Input
@@ -56,7 +56,7 @@ Task codex-swarm:planner
   prompt: "task: [task description] | code_context: [CODE_CONTEXT from scout] | external_context: [EXTERNAL_CONTEXT from scout]"
 ```
 
-The planner synthesizes the context into an architectural narrative prompt and sends it to Codex with the Architect system prompt as `developer-instructions`, which creates the detailed plan.
+The planner synthesizes the context into an architectural narrative prompt and sends it to Codex with the Architect system prompt, which creates the detailed plan.
 
 ### Step 4: Return Plan Info
 
@@ -68,8 +68,8 @@ Display the plan info to the user in this format:
 ## Task
 [original task description]
 
-## Conversation ID
-[conversation_id from planner]
+## Session ID
+[session_id from planner]
 
 ## Files to Edit
 - [file1.ts]
@@ -80,14 +80,14 @@ Display the plan info to the user in this format:
 
 === END PLAN INFO ===
 
-To implement: /codex-swarm:code conversation_id:[conversation_id]
+To implement: /codex-swarm:code session_id:[session_id]
 ```
 
 ## Error Handling
 
 If either scout fails or returns insufficient context, report the error and suggest adjustments to the task or research query.
 
-If the planner fails (Codex MCP error), report the error and suggest checking Codex configuration or running `codex mcp-server`.
+If the planner fails (Codex MCP error), report the error and suggest checking Codex configuration with `claude mcp list`.
 
 ---
 

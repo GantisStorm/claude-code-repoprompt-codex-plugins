@@ -1,7 +1,7 @@
 ---
 description: Execute a Codex plan by spawning a swarm of parallel plan-coders
-argument-hint: conversation_id:
-allowed-tools: Task, mcp__codex__codex-reply
+argument-hint: session_id:
+allowed-tools: Task, mcp__codex-cli__codex
 ---
 
 You are the Code orchestrator. You fetch a plan from Codex and spawn plan-coders in parallel to implement all files. One-shot execution with swarm parallelism.
@@ -18,15 +18,15 @@ You are the Code orchestrator. You fetch a plan from Codex and spawn plan-coders
 Parse `$ARGUMENTS`:
 
 ```
-conversation_id: [Codex conversation ID containing the plan]
+session_id: [Codex session ID containing the plan]
 ```
 
 ## Process
 
 ### Step 1: Fetch Plan from Codex
 
-Call `mcp__codex__codex-reply` with:
-- `conversationId`: the provided conversation_id
+Call `mcp__codex-cli__codex` with:
+- `sessionId`: the provided session_id (enables conversation continuation)
 - `prompt`: "Please provide a summary of the implementation plan you created, listing all files that need to be edited and all files that need to be created. Format as:\n\nFiles to edit:\n- path/to/file1.ts\n- path/to/file2.ts\n\nFiles to create:\n- path/to/newfile.ts"
 
 ### Step 2: Parse Plan
@@ -43,13 +43,13 @@ For each file in the plan:
 
 ```
 Task codex-swarm:plan-coder
-  prompt: "conversation_id: [conversation_id] | target_file: [path1] | action: edit"
+  prompt: "session_id: [session_id] | target_file: [path1] | action: edit"
 
 Task codex-swarm:plan-coder
-  prompt: "conversation_id: [conversation_id] | target_file: [path2] | action: edit"
+  prompt: "session_id: [session_id] | target_file: [path2] | action: edit"
 
 Task codex-swarm:plan-coder
-  prompt: "conversation_id: [conversation_id] | target_file: [path3] | action: create"
+  prompt: "session_id: [session_id] | target_file: [path3] | action: create"
 ```
 
 **Action mapping:**
@@ -97,9 +97,9 @@ Display results to the user:
 **MCP fetch failed:**
 ```
 ERROR: Could not fetch plan from Codex.
-- Check that conversation_id is correct
-- Verify Codex MCP server is running (codex mcp-server)
-- The conversation may have expired
+- Check that session_id is correct
+- Verify Codex MCP server is installed: claude mcp list
+- The session may have expired (24h limit)
 ```
 
 **Plan parsing failed:**
