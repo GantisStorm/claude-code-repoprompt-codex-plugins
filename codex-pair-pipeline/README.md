@@ -1,6 +1,6 @@
 # Codex Pair Pipeline
 
-Coordinates specialized agents to implement complex, multi-file coding tasks with Codex MCP. Uses **iterative discovery** where users build context incrementally, then Codex creates detailed architectural plans using the Architect system prompt.
+Coordinates specialized agents to implement complex, multi-file coding tasks with Codex MCP using [tuannvm/codex-mcp-server](https://github.com/tuannvm/codex-mcp-server). Uses **iterative discovery** where users build context incrementally, then Codex creates detailed architectural plans using the Architect system prompt.
 
 ## Quick Start
 
@@ -10,6 +10,9 @@ Coordinates specialized agents to implement complex, multi-file coding tasks wit
 
 # Install the plugin
 /plugin install codex-pair-pipeline@claude-code-repoprompt-codex-plugins
+
+# Install the Codex MCP server
+claude mcp add codex-cli -- npx -y codex-mcp-server
 ```
 
 ## Commands
@@ -30,7 +33,7 @@ Iterative discovery with checkpoints. Best for complex features.
 
 ### command:start-resume - Continue Previous Plan
 
-Discovery loop, then continue in the same Codex conversation. Preserves conversation context.
+Discovery loop, then continue in the same Codex session. Preserves session context.
 
 ```bash
 /codex-pair-pipeline:orchestrate command:start-resume | task:Add password reset flow
@@ -38,16 +41,16 @@ Discovery loop, then continue in the same Codex conversation. Preserves conversa
 /codex-pair-pipeline:orchestrate command:start-resume | task:Add email verification | research:SendGrid API best practices
 ```
 
-**Flow:** code-scout -> checkpoints -> optional doc-scout -> Codex planning -> execution (continues existing Codex conversation)
+**Flow:** code-scout -> checkpoints -> optional doc-scout -> Codex planning -> execution (continues existing Codex session)
 
 **With `research:` provided:** code-scout + doc-scout (parallel) -> checkpoints -> Codex planning -> execution
 
 ### command:fetch - Execute Existing Plan
 
-Execute an existing Codex plan by conversation ID.
+Execute an existing Codex plan by session ID.
 
 ```bash
-/codex-pair-pipeline:orchestrate command:fetch | task:conv-abc123-xyz
+/codex-pair-pipeline:orchestrate command:fetch | task:session-abc123-xyz
 ```
 
 **Flow:** planner-fetch -> execution
@@ -81,7 +84,7 @@ The orchestrator spawns specialized agents via the `Task` tool:
       |         resume   |                                        |                  |
       +========+=========+                                        +========+=========+
                |                                                           |
-               | task:                                                     | conversation_id:
+               | task:                                                     | session_id:
                v                                                           |
 +================================+                                         |
 |  ITERATIVE DISCOVERY LOOP      |                                         |
@@ -128,13 +131,13 @@ The orchestrator spawns specialized agents via the `Task` tool:
 +------------------+                                          +------------------+
 | planner-start    |                                          | planner-fetch    |
 | or planner-start-|                                          |                  |
-|          resume  |                                          | conversation_id: |
+|          resume  |                                          | session_id:      |
 |                  |                                          |                  |
 | instructions:    |                                          +--------+---------+
 | context_package  |                                                   |
 +--------+---------+                                                   |
          |                                                             |
-         | conversation_id +                                           | conversation_id +
+         | session_id +                                                | session_id +
          | file_lists                                                  | file_lists
          v                                                             v
 +------------------+                                          +------------------+
@@ -142,7 +145,7 @@ The orchestrator spawns specialized agents via the `Task` tool:
 | (1/file)         |                                          | (1/file)         |
 |                  |                                          |                  |
 | Input:           |                                          | Input:           |
-|  conversation_id |                                          |  conversation_id |
+|  session_id      |                                          |  session_id      |
 |  target_file     |                                          |  target_file     |
 |  action          |                                          |  action          |
 |                  |                                          |                  |
@@ -176,49 +179,24 @@ The orchestrator spawns specialized agents via the `Task` tool:
 |-------|---------|-------|--------|
 | code-scout | Investigate codebase | Glob, Grep, Read, Bash | Raw CODE_CONTEXT + clarification |
 | doc-scout | Fetch external docs | Any research tools | Raw EXTERNAL_CONTEXT + clarification |
-| planner-start | Synthesize prompt, create plan via Codex | mcp__codex__codex | conversation_id + file lists |
-| planner-start-resume | Synthesize prompt for new task in existing conversation | mcp__codex__codex-reply | conversation_id + file lists |
-| planner-fetch | Fetch existing plan (NO synthesis) | mcp__codex__codex-reply | conversation_id + file lists |
-| plan-coder | Implement single file (Codex mode) | Read, Edit, Write, Glob, Grep, Bash, mcp__codex__codex-reply | status + verified |
+| planner-start | Synthesize prompt, create plan via Codex | mcp__codex-cli__codex | session_id + file lists |
+| planner-start-resume | Synthesize prompt for new task in existing session | mcp__codex-cli__codex | session_id + file lists |
+| planner-fetch | Fetch existing plan (NO synthesis) | mcp__codex-cli__codex | session_id + file lists |
+| plan-coder | Implement single file (Codex mode) | Read, Edit, Write, Glob, Grep, Bash, mcp__codex-cli__codex | status + verified |
 
-## Architect System Prompt
+## Session Continuation
 
-The planner agents send the Architect system prompt to Codex as developer-instructions:
+The tuannvm/codex-mcp-server provides proper session support (unlike the official server which has [Issue #3712](https://github.com/openai/codex/issues/3712)):
 
-```
-You are a senior software architect specializing in code design and implementation planning. Your role is to:
-
-1. Analyze the requested changes and break them down into clear, actionable steps
-2. Create a detailed implementation plan that includes:
-   - Files that need to be modified
-   - Specific code sections requiring changes
-   - New functions, methods, or classes to be added
-   - Dependencies or imports to be updated
-   - Data structure modifications
-   - Interface changes
-   - Configuration updates
-
-For each change:
-- Describe the exact location in the code where changes are needed
-- Explain the logic and reasoning behind each modification
-- Provide example signatures, parameters, and return types
-- Note any potential side effects or impacts on other parts of the codebase
-- Highlight critical architectural decisions that need to be made
-
-You may include short code snippets to illustrate specific patterns, signatures, or structures, but do not implement the full solution.
-
-Focus solely on the technical implementation plan - exclude testing, validation, and deployment considerations unless they directly impact the architecture.
-```
-
-## Context Handling
-
-Since Codex doesn't handle context as well as RepoPrompt, the planner agents include the full CODE_CONTEXT in the prompt sent to Codex, ensuring the architect has all the necessary codebase information to create accurate plans.
+- **sessionId** returned in responses for follow-up calls
+- **24-hour session persistence**
+- Use `listSessions` tool to see active sessions
 
 ## Tips
 
 **Choosing the right command:**
 - `command:start` - Explore unfamiliar code, want checkpoints
-- `command:start-resume` - Continue in same Codex conversation
+- `command:start-resume` - Continue in same Codex session
 - `command:fetch` - Re-execute existing plan
 
 **Getting good results:**
@@ -237,5 +215,5 @@ For RepoPrompt-based planning, see **repoprompt-pair-pipeline** which uses RepoP
 
 ## Requirements
 
-- **Codex MCP** - Required for all planning modes (run `codex mcp-server`)
+- **Codex MCP** - [tuannvm/codex-mcp-server](https://github.com/tuannvm/codex-mcp-server) - Install with `claude mcp add codex-cli -- npx -y codex-mcp-server`
 - **Claude Code** - Orchestration, discovery, and execution

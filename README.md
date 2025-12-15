@@ -40,7 +40,7 @@ A collection of multi-agent orchestration plugins for Claude Code. These plugins
 |---------------|------------|--------------|
 | pair-* | None | No additional setup |
 | repoprompt-* | RepoPrompt MCP | [RepoPrompt App](https://repoprompt.com) |
-| codex-* | Codex MCP | `npm install -g @anthropic/codex` then `codex mcp-server` |
+| codex-* | Codex MCP ([tuannvm/codex-mcp-server](https://github.com/tuannvm/codex-mcp-server)) | `claude mcp add codex-cli -- npx -y codex-mcp-server` |
 
 ---
 
@@ -91,12 +91,11 @@ Or enable them in your `.claude/settings.local.json`:
 
 **For Codex plugins:**
 ```bash
-# Install Codex CLI
-npm install -g @anthropic/codex
-
-# Start the MCP server
-codex mcp-server
+# Install the tuannvm/codex-mcp-server (provides working session support)
+claude mcp add codex-cli -- npx -y codex-mcp-server
 ```
+
+> **Note:** We use [tuannvm/codex-mcp-server](https://github.com/tuannvm/codex-mcp-server) instead of the official `codex mcp-server` because the official server has a bug where it doesn't return conversation IDs ([Issue #3712](https://github.com/openai/codex/issues/3712)), breaking multi-turn conversations.
 
 ---
 
