@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Claude Code plugin collection with RepoPrompt and Codex integrations",
-    "version": "1.3.0"
+    "version": "1.4.0"
   },
   "plugins": [
     {
@@ -35,8 +35,8 @@
     {
       "name": "codex-pair-pipeline",
       "source": "./codex-pair-pipeline",
-      "description": "Multi-agent orchestration for complex coding tasks with Codex MCP (tuannvm/codex-mcp-server). Scouts gather raw context, planners synthesize architectural narrative prompts with gpt-5.2. Returns full plan with per-file instructions. Iterative discovery with user checkpoints and parallel execution.",
-      "version": "1.3.0"
+      "description": "Multi-agent orchestration for complex coding tasks with Codex MCP (tuannvm/codex-mcp-server). Scouts gather raw context, planners synthesize architectural narrative prompts with gpt-5.2. Returns full plan with per-file instructions. Iterative discovery with user checkpoints and parallel execution. Session continuation via sessionId for command:start-resume.",
+      "version": "1.4.0"
     },
     {
       "name": "codex-swarm",

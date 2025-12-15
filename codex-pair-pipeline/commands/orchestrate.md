@@ -45,8 +45,9 @@ Parse `$ARGUMENTS` according to this pattern table:
 **State Management:** Maintain these in conversation memory:
 - `last_plan` - The full architectural plan text from planning agent
 - `context_package` - Accumulated context (CODE_CONTEXT, EXTERNAL_CONTEXT, Q&A)
+- `last_session_id` - The Codex sessionId from the most recent planner (REQUIRED for command:start-resume)
 
-**Note:** We cannot fetch plans from Codex sessions, so plans are passed directly from planners to coders.
+**Note:** We cannot fetch plans from Codex sessions, so plans are passed directly from planners to coders. However, `sessionId` enables conversation continuity when using `command:start-resume`.
 
 ## Process
 
@@ -195,26 +196,36 @@ The context package accumulates:
 
 **Routing by command type:**
 
-| Command | Discovery | Planning Agent |
-|---------|-----------|----------------|
-| `command:start` | Full loop + checkpoints | planner-start |
-| `command:start-resume` | Full loop + checkpoints | planner-start-resume |
+| Command | Discovery | Planning Agent | Session |
+|---------|-----------|----------------|---------|
+| `command:start` | Full loop + checkpoints | planner-start | Creates new session |
+| `command:start-resume` | Full loop + checkpoints | planner-start-resume | Continues existing session |
 
 Use the appropriate planning agent based on the operation type:
 
-**For `command:start` task:**
+**For `command:start` task (new session):**
 
 ```
 Task codex-pair-pipeline:planner-start
   prompt: "instructions: [assembled context package]"
 ```
 
-**For `command:start-resume`:**
+After planner-start returns, store:
+- `last_plan` = the returned plan text
+- `last_session_id` = the returned `sessionId` (IMPORTANT for future resumptions)
+
+**For `command:start-resume` (continues existing session):**
+
+**IMPORTANT:** This REQUIRES a stored `last_session_id` from a previous `command:start` operation. If no session exists, report an error and suggest using `command:start` first.
 
 ```
 Task codex-pair-pipeline:planner-start-resume
-  prompt: "instructions: [assembled context package]"
+  prompt: "sessionId: [last_session_id] | instructions: [assembled context package]"
 ```
+
+After planner-start-resume returns, update:
+- `last_plan` = the returned plan text
+- `last_session_id` = the returned `sessionId` (preserved for future continuations)
 
 Store the returned `plan` as `last_plan`. The planner returns the FULL plan with per-file instructions under `### [filename] [action]` headers.
 

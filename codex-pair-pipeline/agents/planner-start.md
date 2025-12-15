@@ -156,6 +156,7 @@ Return this exact structure with the FULL plan text:
 
 ```
 status: SUCCESS
+sessionId: [sessionId from Codex MCP response - IMPORTANT for future resumptions]
 files_to_edit:
   - path/to/existing1.ts
   - path/to/existing2.ts
@@ -176,19 +177,23 @@ files_to_create:
 [Instructions from Codex for this file]
 ```
 
-**IMPORTANT**: The orchestrator cannot fetch plans from Codex sessions. You MUST return the full plan text with per-file instructions so the orchestrator can distribute them to coders.
+**IMPORTANT**:
+- Extract and return the `sessionId` from the Codex MCP response. The orchestrator stores this for `command:start-resume` operations.
+- The orchestrator cannot fetch plans from Codex sessions. You MUST return the full plan text with per-file instructions so the orchestrator can distribute them to coders.
 
 ## Error Handling
 
 **MCP tool fails:**
 ```
 status: FAILED
+sessionId: [sessionId from MCP response if available]
 error: [error message from MCP]
 ```
 
 **Codex times out:**
 ```
 status: FAILED
+sessionId: [sessionId if response was partial]
 error: Codex MCP timed out - try with a simpler task or increase timeout
 ```
 
