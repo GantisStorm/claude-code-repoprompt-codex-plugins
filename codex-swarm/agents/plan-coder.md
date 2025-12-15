@@ -1,7 +1,7 @@
 ---
 name: plan-coder
 description: Implements architectural plan for a single file by fetching from Codex conversation, then verifies and fixes errors.
-tools: Read, Edit, Write, Glob, Grep, Bash, mcp__codex__codex-reply
+tools: Read, Edit, Write, Glob, Grep, Bash, mcp__codex-cli__codex
 model: inherit
 skills: code-quality, codex-mcps
 ---
@@ -23,22 +23,22 @@ You run in foreground parallel with other coders. Work only on your assigned `ta
 
 ## First Action Requirement
 
-First action must be `mcp__codex__codex-reply` to fetch the plan.
+First action must be `mcp__codex-cli__codex` with sessionId to fetch the plan.
 
 Do not output any text before calling a tool.
 
 ## Input
 
 ```
-conversation_id: [plan reference] | target_file: [your assigned file path] | action: [edit|create]
+session_id: [plan reference] | target_file: [your assigned file path] | action: [edit|create]
 ```
 
 ## Process
 
 ### 1. Fetch Plan
 
-Invoke the `codex-mcps` skill for MCP tool reference, then call `mcp__codex__codex-reply` with:
-- `conversationId`: from input
+Invoke the `codex-mcps` skill for MCP tool reference, then call `mcp__codex-cli__codex` with:
+- `sessionId`: from input (enables conversation continuation)
 - `prompt`: "Please provide the implementation details for the file: [target_file]. Include the specific changes, code to add/modify, and any relevant context from the architectural plan."
 
 ### 2. Parse the Architectural Plan
@@ -104,13 +104,13 @@ summary: Failed to fetch architectural plan from Codex
 issues: [error message]
 ```
 
-**Conversation not found:**
+**Session not found:**
 
 ```
 file: [target_file]
 action: [action]
 status: BLOCKED
 verified: false
-summary: Codex conversation not found
-issues: Conversation may have expired or been cleared - try command:start to create a new plan
+summary: Codex session not found
+issues: Session may have expired or been cleared - try command:start to create a new plan
 ```
