@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Claude Code plugin collection with RepoPrompt and Codex integrations",
-    "version": "1.1.0"
+    "version": "1.2.0"
   },
   "plugins": [
     {
@@ -35,14 +35,14 @@
     {
       "name": "codex-pair-pipeline",
       "source": "./codex-pair-pipeline",
-      "description": "Multi-agent orchestration for complex coding tasks with Codex MCP. Scouts gather raw context, planners synthesize architectural narrative prompts with gpt-5.2. Uses Architect system prompt for detailed implementation plans. Iterative discovery with user checkpoints and parallel execution.",
-      "version": "1.1.0"
+      "description": "Multi-agent orchestration for complex coding tasks with Codex MCP (tuannvm/codex-mcp-server). Scouts gather raw context, planners synthesize architectural narrative prompts with gpt-5.2. Uses session continuation for multi-turn planning. Iterative discovery with user checkpoints and parallel execution.",
+      "version": "1.2.0"
     },
     {
       "name": "codex-swarm",
       "source": "./codex-swarm",
-      "description": "One-shot swarm commands with Codex MCP planning. /plan spawns parallel scouts, then Codex creates architectural plans using gpt-5.2. /code spawns parallel coders that fetch from Codex. Fast parallel execution with intelligent planning.",
-      "version": "1.1.0"
+      "description": "One-shot swarm commands with Codex MCP planning (tuannvm/codex-mcp-server). /plan spawns parallel scouts, then Codex creates architectural plans using gpt-5.2. /code spawns parallel coders that fetch from Codex via sessionId. Fast parallel execution with session support.",
+      "version": "1.2.0"
     }
   ]
 }
