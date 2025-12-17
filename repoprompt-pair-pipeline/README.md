@@ -30,7 +30,7 @@ Iterative discovery with checkpoints. Best for complex features.
 
 ### command:continue - Continue Previous Plan
 
-Discovery loop, then continue in the same RepoPrompt chat. Preserves file selection context.
+Discovery loop, then continue in the same RepoPrompt chat. Preserves file selection context. Runs context optimization before planning.
 
 ```bash
 /repoprompt-pair-pipeline:orchestrate command:continue | task:Add password reset flow
@@ -38,9 +38,9 @@ Discovery loop, then continue in the same RepoPrompt chat. Preserves file select
 /repoprompt-pair-pipeline:orchestrate command:continue | task:Add email verification | research:SendGrid API best practices
 ```
 
-**Flow:** code-scout -> checkpoints -> optional doc-scout -> RepoPrompt planning -> execution (continues existing RepoPrompt chat)
+**Flow:** code-scout -> checkpoints -> optional doc-scout -> **planner-context** -> RepoPrompt planning -> execution (continues existing RepoPrompt chat)
 
-**With `research:` provided:** code-scout + doc-scout (parallel) -> checkpoints -> RepoPrompt planning -> execution
+**With `research:` provided:** code-scout + doc-scout (parallel) -> checkpoints -> **planner-context** -> RepoPrompt planning -> execution
 
 ### command:fetch - Execute Existing Plan
 
@@ -58,107 +58,119 @@ The orchestrator spawns specialized agents via the `Task` tool:
 
 1. **Discovery** - code-scout gathers CODE_CONTEXT; doc-scout adds EXTERNAL_CONTEXT (spawned in parallel when `research:` is provided upfront, otherwise optional at checkpoint)
 2. **Checkpoints** - User answers clarifying questions, decides when context is complete
-3. **Planning** - RepoPrompt synthesizes an architectural narrative prompt and creates detailed plan
+3. **Planning** - RepoPrompt receives XML architectural instructions and creates detailed plan
 4. **Execution** - Coders implement in parallel, verify with code-quality skill
 
 | Command | Discovery | Planning |
 |---------|-----------|----------|
 | `command:start` | Checkpoints + optional research | RepoPrompt (planner-start) |
-| `command:continue` | Checkpoints + optional research | RepoPrompt (planner-continue) |
+| `command:continue` | Checkpoints + optional research | planner-context -> RepoPrompt (planner-continue) |
 | `command:fetch` | None | Fetches existing plan |
 
 ## Architecture Diagram
 
 ```
-                              ORCHESTRATOR
-                                   │
-           ┌───────────────────────┴───────────────────────┐
-           │                                               │
-           ▼                                               ▼
-┌────────────────────┐                          ┌────────────────────┐
-│  command:start or  │                          │   command:fetch    │
-│  continue          │                          │                    │
-└─────────┬──────────┘                          └─────────┬──────────┘
-          │                                               │
-          ▼                                               │ chat_id
-┌─────────────────────────────────────────────────────────┐    │
-│              ITERATIVE DISCOVERY LOOP                   │    │
-│              (Human-in-the-loop control)                │    │
-│                                                         │    │
-│  ┌─────────────────┐                                    │    │
-│  │   code-scout    │                                    │    │
-│  └────────┬────────┘                                    │    │
-│           │                                             │    │
-│           │ CODE_CONTEXT                                │    │
-│           ▼                                             │    │
-│  ┌─────────────────┐                                    │    │
-│  │   CHECKPOINT    │                                    │    │
-│  │ (AskUserQuestion│                                    │    │
-│  │ 1. Clarifying Qs│                                    │    │
-│  │ 2. "Add research│                                    │    │
-│  │  or "Complete"  │                                    │    │
-│  └────────┬────────┘                                    │    │
-│           │                                             │    │
-│      ┌────┴────┐                                        │    │
-│      │         │                                        │    │
-│      ▼         │                                        │    │
-│  ┌─────────┐   │                                        │    │
-│  │doc-scout│   │                                        │    │
-│  └────┬────┘   │                                        │    │
-│       │        │                                        │    │
-│       │ EXTERNAL_CONTEXT                                │    │
-│       ▼        │                                        │    │
-│  ┌─────────────────┐                                    │    │
-│  │   CHECKPOINT    │                                    │    │
-│  │ 1. Clarifying Qs│                                    │    │
-│  │ 2. "Add more"   │                                    │    │
-│  │  or "Complete"  │                                    │    │
-│  └───┬────┬────────┘                                    │    │
-│      │    │                                             │    │
-│      │    └───► (loop back)                             │    │
-│      │                                                  │    │
-│      │ context_package                                  │    │
-└──────┼──────────────────────────────────────────────────┘    │
-       │                                                       │
-       ▼                                                       ▼
-┌─────────────────┐                                 ┌─────────────────┐
-│  planner-start  │                                 │  planner-fetch  │
-│       or        │                                 │                 │
-│ planner-continue│                                 │ (fetches from   │
-│ (RepoPrompt)    │                                 │  RepoPrompt)    │
-│                 │                                 └────────┬────────┘
-└────────┬────────┘                                          │
-         │                                                   │
-         │ chat_id + file_lists                              │ chat_id + file_lists
-         ▼                                                   ▼
-┌─────────────────┐                                 ┌─────────────────┐
-│   plan-coder    │                                 │   plan-coder    │
-│    (1/file)     │                                 │    (1/file)     │
-│                 │                                 │                 │
-│ Input:          │                                 │ Input:          │
-│  chat_id        │                                 │  chat_id        │
-│  target_file    │                                 │  target_file    │
-│                 │                                 │                 │
-│ Fetches plan    │                                 │ Fetches plan    │
-│ from RepoPrompt │                                 │ from RepoPrompt │
-└────────┬────────┘                                 └────────┬────────┘
-         │                                                   │
-         │ status: COMPLETE/BLOCKED                          │
-         └─────────────────────┬─────────────────────────────┘
-                               │
-                               ▼
-                    ┌─────────────────┐
-                    │  ORCHESTRATOR   │
-                    │ Phase 3 Review  │
-                    │                 │
-                    │ Collects results│
-                    │ Reports to user │
-                    └─────────────────┘
+                                    ORCHESTRATOR
+                                         │
+           ┌─────────────────────────────┼─────────────────────────────┐
+           │                             │                             │
+           ▼                             ▼                             ▼
+┌────────────────────┐        ┌────────────────────┐        ┌────────────────────┐
+│   command:start    │        │  command:continue  │        │   command:fetch    │
+└─────────┬──────────┘        └─────────┬──────────┘        └─────────┬──────────┘
+          │                             │                             │
+          ▼                             ▼                             │
+┌─────────────────────────────────────────────────────────────────────┐    │
+│                    ITERATIVE DISCOVERY LOOP                         │    │
+│                    (Human-in-the-loop control)                      │    │
+│                                                                     │    │
+│  ┌─────────────────┐                                                │    │
+│  │   code-scout    │                                                │    │
+│  └────────┬────────┘                                                │    │
+│           │ CODE_CONTEXT                                            │    │
+│           ▼                                                         │    │
+│  ┌─────────────────┐                                                │    │
+│  │   CHECKPOINT    │◄────────────────────────┐                      │    │
+│  │ 1. Clarifying Qs│                         │                      │    │
+│  │ 2. "Add research│                         │                      │    │
+│  │  or "Complete"  │                         │                      │    │
+│  └────────┬────────┘                         │                      │    │
+│           │                                  │                      │    │
+│      ┌────┴────┐                             │                      │    │
+│      ▼         ▼                             │                      │    │
+│  ┌─────────┐  "Complete"                     │                      │    │
+│  │doc-scout│      │                     (loop back)                 │    │
+│  └────┬────┘      │                          │                      │    │
+│       │           │                          │                      │    │
+│       │ EXTERNAL  │                          │                      │    │
+│       │ _CONTEXT  │                          │                      │    │
+│       ▼           │                          │                      │    │
+│  ┌─────────────────┐                         │                      │    │
+│  │   CHECKPOINT    │─────────────────────────┘                      │    │
+│  └───┬─────────────┘                                                │    │
+│      │ "Complete"                                                   │    │
+│      │                                                              │    │
+│      │ context_package                                              │    │
+└──────┼──────────────────────────────────────────────────────────────┘    │
+       │                                                                   │
+       ├─────────────────────────────────┐                                 │
+       │                                 │                                 │
+       ▼ (command:start)                 ▼ (command:continue)              │
+┌─────────────────┐             ┌─────────────────┐                        │
+│  planner-start  │             │ planner-context │                        │
+│                 │             │                 │                        │
+│ Creates new     │             │ Evaluates       │                        │
+│ RepoPrompt chat │             │ workspace       │                        │
+│ via context_    │             │ selection,      │                        │
+│ builder         │             │ adjusts files   │                        │
+└────────┬────────┘             └────────┬────────┘                        │
+         │                               │                                 │
+         │                               ▼                                 │
+         │                      ┌─────────────────┐                        │
+         │                      │planner-continue │                        │
+         │                      │                 │                        │
+         │                      │ Continues chat  │                        │
+         │                      │ via chat_send   │                        │
+         │                      └────────┬────────┘                        │
+         │                               │                                 │
+         │ chat_id + file_lists          │ chat_id + file_lists            │
+         └───────────────┬───────────────┘                                 │
+                         │                                                 │
+                         │                                      ┌──────────┴─────────┐
+                         │                                      │   planner-fetch    │
+                         │                                      │                    │
+                         │                                      │ Fetches existing   │
+                         │                                      │ plan from          │
+                         │                                      │ RepoPrompt         │
+                         │                                      └──────────┬─────────┘
+                         │                                                 │
+                         │                                                 │ chat_id + file_lists
+                         └─────────────────────────┬───────────────────────┘
+                                                   │
+                                                   ▼
+                                    ┌───────────────────────────┐
+                                    │       plan-coder(s)       │
+                                    │        (parallel)         │
+                                    │                           │
+                                    │  Each coder:              │
+                                    │  - Receives chat_id       │
+                                    │  - Fetches plan via MCP   │
+                                    │  - Implements target_file │
+                                    └─────────────┬─────────────┘
+                                                  │
+                                                  │ status: COMPLETE/BLOCKED
+                                                  ▼
+                                    ┌───────────────────────────┐
+                                    │  ORCHESTRATOR Review      │
+                                    │                           │
+                                    │  Collects results,        │
+                                    │  reports to user          │
+                                    └───────────────────────────┘
 ```
 
 **Key flows:**
 - `command:start` -> discovery -> planner-start -> plan-coder
-- `command:continue` -> discovery -> planner-continue -> plan-coder
+- `command:continue` -> discovery -> planner-context -> planner-continue -> plan-coder
 - `command:fetch` -> planner-fetch -> plan-coder
 
 ## Agents
@@ -168,6 +180,7 @@ The orchestrator spawns specialized agents via the `Task` tool:
 | code-scout | Investigate codebase | Glob, Grep, Read, Bash | Raw CODE_CONTEXT + clarification |
 | doc-scout | Fetch external docs | Any research tools | Raw EXTERNAL_CONTEXT + clarification |
 | planner-start | Synthesize prompt, create plan via RepoPrompt | context_builder | chat_id + file lists |
+| planner-context | Evaluate and optimize workspace selection | manage_selection, workspace_context, file_search | selection_summary + ready_for_planning |
 | planner-continue | Synthesize prompt for new task in existing chat | chat_send | chat_id + file lists |
 | planner-fetch | Fetch existing plan (NO synthesis) | chats | chat_id + file lists |
 | plan-coder | Implement single file (RepoPrompt mode) | Read, Edit, Write, Glob, Grep, Bash, chats | status + verified |

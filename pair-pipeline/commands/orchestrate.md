@@ -197,17 +197,17 @@ The planner returns:
 
 ## Phase 2: Execution
 
-Spawn all coders in parallel with plan instructions embedded:
+Spawn all coders in parallel with the full plan. Each coder parses the plan to find its file's instructions:
 
 ```
 Task pair-pipeline:plan-coder
-  prompt: "target_file: [path1] | action: edit | plan: [instructions for this file]"
+  prompt: "target_file: [path1] | action: edit | plan: [FULL PLAN FROM PLANNER]"
 
 Task pair-pipeline:plan-coder
-  prompt: "target_file: [path2] | action: create | plan: [instructions for this file]"
+  prompt: "target_file: [path2] | action: create | plan: [FULL PLAN FROM PLANNER]"
 ```
 
-Extract per-file instructions from the plan's `### [filename] [action]` headers.
+Pass the complete plan to each coder. Do not extract or parse per-file instructions - coders handle their own parsing.
 
 ## Phase 3: Review
 

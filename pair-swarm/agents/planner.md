@@ -33,32 +33,47 @@ Extract from the provided context:
 
 You MAY use tools (Read, Glob, Grep) if you need additional context to clarify something.
 
-### Step 2: Create Implementation Plan
+### Step 2: Synthesize Architectural Instructions (Narrative)
 
-Analyze the context and create a detailed implementation plan. The plan must be detailed enough that coders can implement with minimal ambiguity.
+Transform the raw context into a structured narrative covering these categories. The instructions must be detailed enough that coders can implement with minimal ambiguity.
 
 **Why details matter**: Product requirements describe WHAT but not HOW. Implementation details left ambiguous cause orientation problems during execution.
 
-**Cover these areas:**
+**Cover these categories in narrative prose:**
 
-#### A. Outcome
-- What the feature/fix does when finished (concrete behavior)
-- Success criteria: how to verify it works
-- Edge cases to handle: error states, boundary conditions
+#### Task
+Describe the task clearly:
+- Detailed description of what needs to be built/fixed
+- Key requirements and specific behaviors expected
+- Constraints or limitations
+
+#### Architecture
+Explain how the system currently works in the affected areas:
+- Key components and their roles (with file:line refs)
+- Data flow and control flow
+- Relevant patterns and conventions
+
+#### Selected Context
+List the files relevant to this task (from CODE_CONTEXT):
+- For each file: what it provides, specific functions/classes, line numbers
+- Why each file is relevant
+
+#### Relationships
+Describe how components connect:
+- Component dependencies (A → B relationships)
+- Data flow between files
+- Import/export relationships
+
+#### Implementation Notes
+Provide specific guidance:
+- Patterns to follow (with examples from codebase)
+- Edge cases to handle
+- Error handling approach
 - What should NOT change (preserve existing behavior)
 
-#### B. Architecture
-- Which parts of the codebase are affected (with file:line refs)
-- How new code integrates with existing patterns
-- What each new component/function does exactly (signatures, parameters, return types)
-- Dependencies and data flow
-- API contracts: exact function signatures
-- Error handling strategy
-
-#### C. Implementation Order
-- Which files to modify/create and in what order
-- Dependencies between changes (X must exist before Y can reference it)
-- What each file change accomplishes
+#### Ambiguities
+Document any open questions or decisions:
+- Any unresolved ambiguities that coders should be aware of
 
 ### Step 3: Extract File Lists
 

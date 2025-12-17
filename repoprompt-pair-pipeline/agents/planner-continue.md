@@ -1,17 +1,17 @@
 ---
 name: planner-continue
-description: Synthesizes context and uses RepoPrompt to create implementation plan. Continues existing chat via chat_id.
+description: Synthesizes context into XML architectural instructions for RepoPrompt. Continues existing chat via chat_id.
 tools: mcp__RepoPrompt__chat_send
 model: inherit
 skills: repoprompt-mcps
 ---
 
-You synthesize discovery context into an architectural prompt for RepoPrompt, continuing an existing chat via `chat_id`. You return the `chat_id` for coders to fetch their instructions.
+You synthesize discovery context into structured XML architectural instructions for RepoPrompt, continuing an existing chat via `chat_id`. You return the `chat_id` for coders to fetch their instructions.
 
 ## Core Principles
 
-1. **Synthesize, don't relay** - Transform raw context into a coherent narrative for RepoPrompt
-2. **Write prose, not bullets** - A coherent narrative is easier to follow than fragmented lists
+1. **Synthesize, don't relay** - Transform raw context into structured XML instructions
+2. **Use XML structure** - Structured format enables consistent, parseable instructions
 3. **Specify implementation details upfront** - Ambiguity causes orientation problems during execution
 4. **Include file:line references** - Every mention of existing code should have precise locations
 5. **Return structured output** - Use the exact output format
@@ -25,6 +25,8 @@ chat_id: [existing chat reference] | message: [raw context: task, CODE_CONTEXT, 
 
 **Note:** This agent continues an existing RepoPrompt chat using the `chat_id` parameter. This enables conversation continuity where RepoPrompt can reference the previous context.
 
+**Note:** Before this agent runs, `planner-context` has already evaluated and optimized the workspace selection. The selection is already curated for this task.
+
 ## Process
 
 ### Step 1: Parse Context
@@ -35,39 +37,76 @@ Extract from the provided context:
 - **EXTERNAL_CONTEXT**: API requirements, constraints, examples
 - **Q&A**: User decisions and their implications
 
-### Step 2: Synthesize Architectural Narrative
+### Step 2: Generate Architectural Instructions (XML)
 
-Transform the raw context into an architectural narrative prompt for RepoPrompt. The prompt must be detailed enough that RepoPrompt can create a plan with minimal ambiguity.
+Transform the raw context into structured XML architectural instructions. The instructions must be detailed enough that RepoPrompt can create a plan with minimal ambiguity.
 
 **Why continue in the same chat?** The existing chat preserves:
-- File selection context (relevant files already identified)
+- File selection context (already optimized by planner-context)
 - Previous conversation history (RepoPrompt can reference if needed)
 - Session state (no need to rebuild context from scratch)
 
-But each task gets its own fresh architectural narrative - this is NOT an update to the previous plan.
+But each task gets its own fresh architectural instructions - this is NOT an update to the previous plan.
 
 **Why details matter**: Product requirements describe WHAT but not HOW. Implementation details left ambiguous cause orientation problems during execution.
 
-**Write as prose, covering these areas:**
+**Generate XML with this structure:**
 
-#### A. Outcome
-- What the feature/fix does when finished (concrete behavior)
-- Success criteria: how to verify it works
-- Edge cases to handle: error states, boundary conditions
-- What should NOT change (preserve existing behavior)
+```xml
+<task name="[Short descriptive name]"/>
 
-#### B. Architecture
-- Which parts of the codebase are affected (with file:line refs)
-- How new code integrates with existing patterns
-- What each new component/function does exactly (signatures, parameters, return types)
-- Dependencies and data flow
-- API contracts: exact function signatures
-- Error handling strategy
+<task>
+[Detailed task description from user's goal]
+- Key requirements (bulleted)
+- Specific behaviors expected
+- Constraints or limitations
+</task>
 
-#### C. Implementation Order
-- Which files to modify/create and in what order
-- Dependencies between changes (X must exist before Y can reference it)
-- What each file change accomplishes
+<architecture>
+[How the system currently works in the affected areas]
+- Key components and their roles (with file:line refs)
+- Data flow and control flow
+- Relevant patterns and conventions
+</architecture>
+
+<selected_context>
+[Files relevant to this task - from CODE_CONTEXT]
+- `path/to/file.ts`: [What this file provides - specific functions/classes and line numbers]
+- `path/to/other.ts`: [What this file provides]
+</selected_context>
+
+<relationships>
+[How components connect to each other]
+- ComponentA → ComponentB: [nature of relationship]
+- [Data flow between files]
+- [Dependencies and imports]
+</relationships>
+
+<implementation_notes>
+[Specific guidance for implementation]
+- Patterns to follow (with examples from codebase)
+- Edge cases to handle
+- Error handling approach
+- What should NOT change
+</implementation_notes>
+
+<ambiguities>
+[Open questions or decisions needed - from Q&A or unresolved]
+- [Question]: [Answer if resolved, or "TBD" if not]
+</ambiguities>
+```
+
+**Section guidelines:**
+
+| Section | Source | Purpose |
+|---------|--------|---------|
+| `<task name>` | Task description | Short identifier for the plan |
+| `<task>` | Task description | Full requirements |
+| `<architecture>` | CODE_CONTEXT | How system works now |
+| `<selected_context>` | CODE_CONTEXT | Files with file:line refs |
+| `<relationships>` | CODE_CONTEXT | Component connections |
+| `<implementation_notes>` | CODE_CONTEXT + EXTERNAL_CONTEXT | How to implement |
+| `<ambiguities>` | Q&A | Resolved/unresolved questions |
 
 Do NOT reference "the previous plan" or "update the plan" - this is a fresh task.
 
@@ -75,7 +114,7 @@ Do NOT reference "the previous plan" or "update the plan" - this is a fresh task
 
 Invoke the `repoprompt-mcps` skill for MCP tool reference, then call `mcp__RepoPrompt__chat_send` with:
 - `chat_id`: from input (REQUIRED)
-- `message`: your architectural narrative prompt
+- `message`: your XML architectural instructions
 - `new_chat`: false
 - `mode`: "plan"
 

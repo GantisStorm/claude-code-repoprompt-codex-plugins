@@ -183,7 +183,7 @@ After discovery completes (or immediately for command:fetch), spawn the appropri
 | Command | Planning Agent | Chat |
 |---------|----------------|------|
 | `command:start` | planner-start | Creates new chat |
-| `command:continue` | planner-continue | Continues existing chat |
+| `command:continue` | planner-context → planner-continue | Optimizes context, then continues chat |
 | `command:fetch` | planner-fetch | Fetches existing plan |
 
 **For command:fetch** (skip discovery, use existing plan):
@@ -205,10 +205,26 @@ After planner-start returns, store:
 
 **For command:continue:**
 
+First, run planner-context to evaluate and optimize the workspace selection:
+
+```
+Task repoprompt-pair-pipeline:planner-context
+  prompt: "chat_id: [last_chat_id] | task: [new task description] | existing_context: [CODE_CONTEXT from scouts]"
+```
+
+planner-context returns:
+- `status`: SUCCESS, ADJUSTED, or NO_CHANGE
+- `ready_for_planning`: true if context is ready
+- `selection_summary`: Token counts and file breakdown
+
+If `ready_for_planning` is true, proceed with planner-continue:
+
 ```
 Task repoprompt-pair-pipeline:planner-continue
   prompt: "chat_id: [last_chat_id] | message: [assembled context package]"
 ```
+
+If `ready_for_planning` is false, report the issues to the user before proceeding.
 
 After planner-continue returns, update:
 - `last_chat_id` = returned `chat_id`

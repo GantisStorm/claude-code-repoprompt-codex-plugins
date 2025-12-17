@@ -11,37 +11,37 @@
     {
       "name": "repoprompt-pair-pipeline",
       "source": "./repoprompt-pair-pipeline",
-      "description": "Multi-agent orchestration for complex coding tasks with RepoPrompt. Scouts gather raw context, planners synthesize architectural narrative prompts covering (A) Clear Outcome Specification - success criteria, edge cases; (B) Architectural Specification - code structure, dependencies, component details; (C) Implementation Steps - ordered, verifiable sub-tasks. RepoPrompt creates detailed plans with minimal ambiguity. Parallel coders execute with self-verification.",
+      "description": "Multi-agent orchestration for complex coding tasks with RepoPrompt. Scouts gather raw context, planners synthesize XML architectural instructions with structured sections: task, architecture, selected_context, relationships, implementation_notes, ambiguities. RepoPrompt creates detailed plans with minimal ambiguity. Parallel coders execute with self-verification.",
       "version": "1.2.0"
     },
     {
       "name": "pair-pipeline",
       "source": "./pair-pipeline",
-      "description": "Multi-agent orchestration for complex coding tasks without RepoPrompt. Full discovery loop with user checkpoints, fast planning, and parallel execution. Self-contained with no MCP dependencies.",
+      "description": "Multi-agent orchestration for complex coding tasks without MCP. Scouts gather raw context, planner synthesizes structured narrative (task, architecture, context, relationships, implementation notes, ambiguities) into per-file instructions. Full discovery loop with user checkpoints and parallel execution.",
       "version": "1.2.0"
     },
     {
       "name": "pair-swarm",
       "source": "./pair-swarm",
-      "description": "One-shot swarm commands for planning and coding. /plan spawns parallel scouts to create implementation plans. /code spawns parallel coders to execute plans. No iterative loops - fast parallel execution for well-defined tasks.",
+      "description": "One-shot swarm commands for planning and coding. Scouts gather context in parallel, planner synthesizes structured narrative (task, architecture, context, relationships, implementation notes), parallel coders execute. No iterative loops - fast parallel execution.",
       "version": "1.2.0"
     },
     {
       "name": "repoprompt-swarm",
       "source": "./repoprompt-swarm",
-      "description": "One-shot swarm commands with RepoPrompt planning. /plan spawns parallel scouts, then RepoPrompt creates architectural plans. /code spawns parallel coders that fetch from RepoPrompt. Fast parallel execution with intelligent planning.",
+      "description": "One-shot swarm commands with RepoPrompt planning. Scouts gather context in parallel, planner synthesizes XML architectural instructions for RepoPrompt, parallel coders execute. No iterative loops - fast parallel execution.",
       "version": "1.2.0"
     },
     {
       "name": "codex-pair-pipeline",
       "source": "./codex-pair-pipeline",
-      "description": "Multi-agent orchestration for complex coding tasks with Codex MCP (tuannvm/codex-mcp-server). Scouts gather raw context, planners synthesize architectural narrative prompts with gpt-5.2. Returns full plan with per-file instructions. Iterative discovery with user checkpoints and parallel execution. Session continuation via sessionId for command:continue.",
+      "description": "Multi-agent orchestration for complex coding tasks with Codex MCP (tuannvm/codex-mcp-server). Scouts gather raw context, planners synthesize XML architectural instructions for gpt-5.2. Returns full plan with per-file instructions. Iterative discovery with user checkpoints and parallel execution. Session continuation via sessionId for command:continue.",
       "version": "1.5.0"
     },
     {
       "name": "codex-swarm",
       "source": "./codex-swarm",
-      "description": "One-shot swarm commands with Codex MCP planning (tuannvm/codex-mcp-server). /plan spawns parallel scouts, then Codex creates architectural plans using gpt-5.2 and returns full plan. /code parses plan and spawns parallel coders with direct instructions. Fast parallel execution.",
+      "description": "One-shot swarm commands with Codex MCP planning. Scouts gather context in parallel, planner synthesizes XML architectural instructions for Codex (gpt-5.2), parallel coders execute. No iterative loops - fast parallel execution.",
       "version": "1.4.0"
     }
   ]

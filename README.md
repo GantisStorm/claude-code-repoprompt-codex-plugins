@@ -170,8 +170,8 @@ The key architectural difference is **how plans move from planner to coders**.
 │  ┌───────────┐         ┌─────────────────────────────────────────────┐  │
 │  │  PLANNER  │────────►│             FULL PLAN TEXT                  │  │
 │  └───────────┘         │    (returned directly to orchestrator)      │  │
-│                        └──────────────────────┬──────────────────────┘  │
-│                                               │                         │
+│                        └─────────────────────┬───────────────────────┘  │
+│                                              │                          │
 │                 ┌────────────────────────────┼────────────────────┐     │
 │                 │                            │                    │     │
 │                 ▼                            ▼                    ▼     │
@@ -291,6 +291,7 @@ Pipeline plugins use specialized planner agents:
 | Agent | Purpose |
 |-------|---------|
 | **planner-start** | Creates initial plan from discovery context |
+| **planner-context** | (repoprompt only) Evaluates and optimizes workspace selection before continuing |
 | **planner-continue** | Continues existing session with new task/context |
 | **planner-fetch** | (repoprompt only) Fetches existing plan by chat_id |
 
@@ -449,7 +450,7 @@ When a plan-coder returns BLOCKED:
 │   ├── commands/                 # plan, code
 │   └── skills/                   # code-quality
 ├── repoprompt-pair-pipeline/     # RepoPrompt planning + Pipeline
-│   ├── agents/                   # scouts, plan-coder (MCP), planners
+│   ├── agents/                   # scouts, plan-coder (MCP), planners, planner-context
 │   ├── commands/                 # orchestrate
 │   └── skills/                   # code-quality, repoprompt-mcps
 ├── repoprompt-swarm/             # RepoPrompt planning + Swarm

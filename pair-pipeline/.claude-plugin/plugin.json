@@ -1,6 +1,6 @@
 {
   "name": "pair-pipeline",
-  "description": "Multi-agent orchestration for complex coding tasks. Scouts gather raw context with user checkpoints, planner creates implementation plans with per-file instructions. Parallel coders execute with self-verification.",
+  "description": "Multi-agent orchestration for complex coding tasks. Scouts gather raw context with user checkpoints, planner synthesizes structured narrative (task, architecture, context, relationships, implementation notes, ambiguities) into per-file instructions. Parallel coders execute with self-verification.",
   "version": "1.2.0",
   "author": {
     "name": "Pair Pipeline Contributors"

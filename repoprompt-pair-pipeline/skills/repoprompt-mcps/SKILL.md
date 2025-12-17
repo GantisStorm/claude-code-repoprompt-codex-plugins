@@ -1,7 +1,7 @@
 ---
 name: repoprompt-mcps
-description: RepoPrompt MCP tool reference. Supplemental parameter docs for context_builder, chat_send, and chats tools.
-allowed-tools: mcp__RepoPrompt__context_builder, mcp__RepoPrompt__chat_send, mcp__RepoPrompt__chats
+description: RepoPrompt MCP tool reference. Supplemental parameter docs for context_builder, chat_send, chats, and workspace management tools.
+allowed-tools: mcp__RepoPrompt__context_builder, mcp__RepoPrompt__chat_send, mcp__RepoPrompt__chats, mcp__RepoPrompt__manage_workspaces, mcp__RepoPrompt__manage_selection, mcp__RepoPrompt__workspace_context, mcp__RepoPrompt__get_file_tree, mcp__RepoPrompt__get_code_structure, mcp__RepoPrompt__file_search, mcp__RepoPrompt__read_file
 ---
 
 # RepoPrompt MCP Tools Reference
@@ -91,3 +91,162 @@ List chats or view a chat's history.
 - `role: "user"` = task context (ignore)
 - `role: "assistant"` = architectural plan (parse this)
 - Always use the **last** assistant message
+
+---
+
+## `mcp__RepoPrompt__manage_workspaces`
+
+Manage workspaces across RepoPrompt windows. Use `select_tab` to bind your MCP connection to a specific compose tab for consistent context.
+
+**Key actions:**
+- `list_tabs` - List compose tabs for the active workspace
+- `select_tab` - Bind this MCP connection to a specific tab (recommended for stable context)
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `action` | Yes | `"list"` \| `"switch"` \| `"create"` \| `"delete"` \| `"add_folder"` \| `"remove_folder"` \| `"list_tabs"` \| `"select_tab"` |
+| `tab` | For select_tab | Tab UUID or name |
+| `workspace` | For switch/delete/folder ops | Workspace UUID or name |
+| `focus` | No | For select_tab: if true, switches UI to show selected tab (default: false) |
+
+**Tab binding:**
+- Without binding, tools use the user's currently active tab (can be inconsistent)
+- Use `select_tab` to pin your connection to a specific tab for predictable operations
+
+---
+
+## `mcp__RepoPrompt__manage_selection`
+
+Manage the current file selection used by all tools.
+
+**Operations:**
+- `get` - View current selection
+- `add` - Add files/directories to selection
+- `remove` - Remove files from selection
+- `set` - Replace entire selection
+- `clear` - Clear selection
+- `promote` - Upgrade codemap to full file
+- `demote` - Downgrade full file to codemap
+
+**Modes:**
+- `full` - Complete file content (default)
+- `slices` - Specific line ranges only
+- `codemap_only` - Signatures only (efficient for reference files)
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `op` | Yes | `"get"` \| `"add"` \| `"remove"` \| `"set"` \| `"clear"` \| `"preview"` \| `"promote"` \| `"demote"` |
+| `paths` | For add/remove/set | File or folder paths |
+| `mode` | No | `"full"` \| `"slices"` \| `"codemap_only"` |
+| `view` | No | `"summary"` \| `"files"` \| `"content"` |
+| `slices` | For slice mode | Array of `{path, ranges: [{start_line, end_line, description}]}` |
+
+**Examples:**
+```json
+// Add full file
+{"op": "add", "paths": ["src/auth/UserAuth.ts"]}
+
+// Get current selection with file details
+{"op": "get", "view": "files"}
+
+// Promote codemap to full file
+{"op": "promote", "paths": ["src/models/User.ts"]}
+
+// Add slices for large file
+{"op": "set", "mode": "slices", "slices": [
+  {"path": "src/auth/Auth.ts", "ranges": [
+    {"start_line": 45, "end_line": 120, "description": "UserAuth class - login/logout"}
+  ]}
+]}
+```
+
+---
+
+## `mcp__RepoPrompt__workspace_context`
+
+Snapshot of workspace state: prompt, selection, code structure (codemaps), tokens.
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `include` | No | Array: `["prompt", "selection", "code", "files", "tree", "tokens"]` (defaults to prompt, selection, code, tokens) |
+| `path_display` | No | `"relative"` \| `"full"` |
+
+**Returns:** Current token count, selected files, prompt content, and code structure.
+
+---
+
+## `mcp__RepoPrompt__get_file_tree`
+
+ASCII directory tree of the project.
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `type` | Yes | `"files"` \| `"roots"` |
+| `mode` | No | For files: `"auto"` \| `"full"` \| `"folders"` \| `"selected"` |
+| `path` | No | Starting folder for subtree |
+| `max_depth` | No | Maximum depth (root = 0) |
+
+**Examples:**
+```json
+// Auto tree (fits ~10k tokens)
+{"type": "files", "mode": "auto"}
+
+// Drill into specific directory
+{"type": "files", "mode": "auto", "path": "src/components", "max_depth": 2}
+```
+
+---
+
+## `mcp__RepoPrompt__get_code_structure`
+
+Return code structure (codemaps) for files and directories.
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `scope` | No | `"selected"` (current selection) or `"paths"` (explicit paths, default) |
+| `paths` | For paths scope | Array of file/directory paths |
+| `max_results` | No | Maximum codemaps to return (default: 25) |
+
+---
+
+## `mcp__RepoPrompt__file_search`
+
+Search by file path and/or content.
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `pattern` | Yes | Search pattern (regex by default) |
+| `mode` | No | `"auto"` \| `"path"` \| `"content"` \| `"both"` |
+| `regex` | No | Use regex matching (default: true) |
+| `max_results` | No | Maximum results (default: 50) |
+| `context_lines` | No | Lines of context around matches |
+
+**Examples:**
+```json
+// Find files containing UserAuth
+{"pattern": "UserAuth", "mode": "content"}
+
+// Find Swift files
+{"pattern": "*.swift", "mode": "path", "regex": false}
+```
+
+---
+
+## `mcp__RepoPrompt__read_file`
+
+Read file contents with optional line range.
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `path` | Yes | File path |
+| `start_line` | No | Line to start from (1-based), negative for tail |
+| `limit` | No | Number of lines to read |
+
+**Examples:**
+```json
+// Read entire file
+{"path": "src/auth/UserAuth.ts"}
+
+// Read lines 45-120
+{"path": "src/auth/UserAuth.ts", "start_line": 45, "limit": 76}
+```
