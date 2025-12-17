@@ -101,6 +101,13 @@ But each task gets its own fresh architectural instructions - this is NOT an upd
 - [Another requirement with specific details]
 - [Technical constraints or specifications]
 </requirements>
+
+<constraints>
+[Hard technical constraints that MUST be followed]
+- [Explicit type requirements, file paths, naming conventions]
+- [Specific APIs, URLs, parameters to use]
+- [Patterns or approaches that are required or forbidden]
+</constraints>
 ```
 
 **Section guidelines:**
@@ -115,6 +122,7 @@ But each task gets its own fresh architectural instructions - this is NOT an upd
 | `<implementation_notes>` | CODE_CONTEXT + EXTERNAL_CONTEXT | How to implement |
 | `<ambiguities>` | Q&A | Resolved/unresolved questions |
 | `<requirements>` | Task + Q&A | Acceptance criteria for completion |
+| `<constraints>` | Task + EXTERNAL_CONTEXT | Hard technical constraints |
 
 Do NOT reference "the previous plan" or "update the plan" - this is a fresh task.
 

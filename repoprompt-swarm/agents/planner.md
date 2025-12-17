@@ -89,6 +89,13 @@ Transform the raw context into structured XML architectural instructions. The in
 - [Another requirement with specific details]
 - [Technical constraints or specifications]
 </requirements>
+
+<constraints>
+[Hard technical constraints that MUST be followed]
+- [Explicit type requirements, file paths, naming conventions]
+- [Specific APIs, URLs, parameters to use]
+- [Patterns or approaches that are required or forbidden]
+</constraints>
 ```
 
 **Section guidelines:**
@@ -103,6 +110,7 @@ Transform the raw context into structured XML architectural instructions. The in
 | `<implementation_notes>` | CODE_CONTEXT + EXTERNAL_CONTEXT | How to implement |
 | `<ambiguities>` | Any unresolved questions | Open decisions |
 | `<requirements>` | Task + Q&A | Acceptance criteria for completion |
+| `<constraints>` | Task + EXTERNAL_CONTEXT | Hard technical constraints |
 
 ### Step 3: Call RepoPrompt MCP
 
