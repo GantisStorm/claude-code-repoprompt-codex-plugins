@@ -75,6 +75,12 @@ Provide specific guidance:
 Document any open questions or decisions:
 - Any unresolved ambiguities that coders should be aware of
 
+#### Requirements
+List specific acceptance criteria - the plan is complete when ALL are satisfied:
+- Concrete, verifiable requirements
+- Technical constraints or specifications
+- Specific behaviors that must be implemented
+
 ### Step 3: Extract File Lists
 
 From your analysis, identify:

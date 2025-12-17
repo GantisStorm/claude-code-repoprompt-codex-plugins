@@ -94,6 +94,13 @@ But each task gets its own fresh architectural instructions - this is NOT an upd
 [Open questions or decisions needed - from Q&A or unresolved]
 - [Question]: [Answer if resolved, or "TBD" if not]
 </ambiguities>
+
+<requirements>
+[Specific acceptance criteria - the plan is complete when ALL are satisfied]
+- [Concrete, verifiable requirement]
+- [Another requirement with specific details]
+- [Technical constraints or specifications]
+</requirements>
 ```
 
 **Section guidelines:**
@@ -107,6 +114,7 @@ But each task gets its own fresh architectural instructions - this is NOT an upd
 | `<relationships>` | CODE_CONTEXT | Component connections |
 | `<implementation_notes>` | CODE_CONTEXT + EXTERNAL_CONTEXT | How to implement |
 | `<ambiguities>` | Q&A | Resolved/unresolved questions |
+| `<requirements>` | Task + Q&A | Acceptance criteria for completion |
 
 Do NOT reference "the previous plan" or "update the plan" - this is a fresh task.
 

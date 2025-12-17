@@ -83,6 +83,12 @@ Document any open questions or decisions:
 - Questions from Q&A with their answers
 - Any unresolved ambiguities that coders should be aware of
 
+#### Requirements
+List specific acceptance criteria - the plan is complete when ALL are satisfied:
+- Concrete, verifiable requirements
+- Technical constraints or specifications
+- Specific behaviors that must be implemented
+
 Do NOT reference "the previous plan" or "update the plan" - this is a fresh task.
 
 ### Step 3: Extract File Lists
