@@ -1,6 +1,6 @@
 # Codex Swarm
 
-One-shot swarm commands with Codex MCP planning using [tuannvm/codex-mcp-server](https://github.com/tuannvm/codex-mcp-server). No iterative loops or checkpoints - just parallel agent execution with Codex's intelligent planning using `gpt-5.2` with high reasoning effort.
+One-shot swarm commands with Codex CLI planning. No iterative loops or checkpoints - just parallel agent execution with Codex's intelligent planning using `gpt-5.2` with high reasoning effort.
 
 ## Quick Start
 
@@ -10,16 +10,18 @@ One-shot swarm commands with Codex MCP planning using [tuannvm/codex-mcp-server]
 
 # Install the plugin
 /plugin install codex-swarm@claude-code-repoprompt-codex-plugins
-
-# Install the Codex MCP server
-claude mcp add codex-cli -- npx -y codex-mcp-server
 ```
+
+## Requirements
+
+- **Codex CLI** - Install with `npm install -g @openai/codex` and authenticate via `codex login`
+- **Claude Code** - Orchestration and execution
 
 ## Commands
 
 ### /plan - Create Implementation Plan via Codex
 
-Spawns code-scout and doc-scout in parallel, then uses Codex with the Architect system prompt to create an implementation plan.
+Spawns code-scout and doc-scout in parallel, then uses Codex CLI with the Architect system prompt to create an implementation plan.
 
 ```bash
 /codex-swarm:plan task:Add user authentication with JWT tokens | research:JWT best practices Node.js
@@ -88,14 +90,12 @@ Takes the plan from `/plan` and spawns plan-coders in parallel to implement all 
 |-------|---------|-------|--------|
 | code-scout | Investigate codebase | Glob, Grep, Read, Bash | Raw CODE_CONTEXT |
 | doc-scout | Fetch external docs | Any research tools | Raw EXTERNAL_CONTEXT |
-| planner | Synthesize context, send to Codex | mcp__codex-cli__codex | Full plan + file lists |
+| planner | Synthesize context, send to Codex CLI | Bash | Full plan + file lists |
 | plan-coder | Implement single file | Read, Edit, Write, Glob, Grep, Bash | Status + verified |
 
 ## Plan Distribution
 
 Plans are passed directly from `/plan` to `/code` - the orchestrator distributes per-file instructions to coders. This avoids session continuation issues and ensures each coder has exactly the instructions it needs.
-
-The tuannvm/codex-mcp-server is still required for the planner to communicate with Codex, but coders don't need MCP access.
 
 ## Tips
 
@@ -107,11 +107,11 @@ The tuannvm/codex-mcp-server is still required for the planner to communicate wi
 **Using /code:**
 - Copy the Implementation Plan section from `/plan` output
 - If some files are BLOCKED, fix issues and re-run `/plan` with a modified task
-- Each coder receives its instructions directly - no MCP needed
+- Each coder receives its instructions directly
 
 **When things go wrong:**
 - BLOCKED status includes error details - read them
-- Check if Codex MCP server is installed: `claude mcp list` should show `codex-cli`
+- Verify Codex CLI is installed: `codex --version`
 - Try regenerating the plan with more specific task/research
 
 ## Comparison with Other Plugins
@@ -119,7 +119,7 @@ The tuannvm/codex-mcp-server is still required for the planner to communicate wi
 | Feature | codex-swarm | repoprompt-swarm | codex-pair-pipeline |
 |---------|-------------|------------------|---------------------|
 | Execution | One-shot | One-shot | Iterative with checkpoints |
-| Planning | Codex MCP (gpt-5.2) | RepoPrompt MCP | Codex MCP (gpt-5.2) |
+| Planning | Codex CLI (gpt-5.2) | RepoPrompt MCP | Codex CLI (gpt-5.2) |
 | User control | Review plan, then execute | Review plan, then execute | Checkpoints during discovery |
 | Commands | /plan + /code (separate) | /plan + /code (separate) | /orchestrate (all-in-one) |
 | Use case | Well-defined tasks with Codex | Well-defined tasks with RepoPrompt | Exploratory tasks |
@@ -129,8 +129,3 @@ Use **codex-swarm** when you know what you want and want Codex's gpt-5.2 archite
 Use **repoprompt-swarm** when you prefer RepoPrompt's context handling.
 
 Use **codex-pair-pipeline** when you need iterative discovery with user checkpoints.
-
-## Requirements
-
-- **Codex MCP** - [tuannvm/codex-mcp-server](https://github.com/tuannvm/codex-mcp-server) - Install with `claude mcp add codex-cli -- npx -y codex-mcp-server`
-- **Claude Code** - Orchestration and execution

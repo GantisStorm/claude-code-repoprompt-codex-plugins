@@ -1,6 +1,6 @@
 # Gemini Pair Pipeline
 
-Coordinates specialized agents to implement complex, multi-file coding tasks with Gemini MCP using [jamubc/gemini-mcp-tool](https://github.com/jamubc/gemini-mcp-tool). Uses **iterative discovery** where users build context incrementally, then Gemini creates detailed architectural plans using the Architect system prompt.
+Coordinates specialized agents to implement complex, multi-file coding tasks with Gemini CLI. Uses **iterative discovery** where users build context incrementally, then Gemini creates detailed architectural plans using the Architect system prompt.
 
 ## Quick Start
 
@@ -10,10 +10,12 @@ Coordinates specialized agents to implement complex, multi-file coding tasks wit
 
 # Install the plugin
 /plugin install gemini-pair-pipeline@claude-code-repoprompt-codex-plugins
-
-# Install the Gemini MCP server
-claude mcp add gemini-cli -- npx -y @anthropic/gemini-mcp-tool
 ```
+
+## Requirements
+
+- **Gemini CLI** - Install with `npm install -g @google/gemini-cli` or `brew install gemini-cli` (macOS)
+- **Claude Code** - Orchestration, discovery, and execution
 
 ## Commands
 
@@ -51,7 +53,7 @@ The orchestrator spawns specialized agents via the `Task` tool:
 
 1. **Discovery** - code-scout gathers CODE_CONTEXT; doc-scout adds EXTERNAL_CONTEXT (spawned in parallel when `research:` is provided upfront, otherwise optional at checkpoint)
 2. **Checkpoints** - User answers clarifying questions, decides when context is complete
-3. **Planning** - Gemini (using `gemini-3-flash-preview` model) receives Architect system prompt + CODE_CONTEXT + architectural narrative and creates detailed plan with per-file instructions
+3. **Planning** - Gemini CLI (using `gemini-3-flash-preview` model) receives Architect system prompt + CODE_CONTEXT + architectural narrative and creates detailed plan with per-file instructions
 4. **Execution** - Coders receive plan directly and implement in parallel, verify with code-quality skill
 
 | Command | Discovery | Planning |
@@ -152,24 +154,13 @@ The orchestrator spawns specialized agents via the `Task` tool:
 |-------|---------|-------|--------|
 | code-scout | Investigate codebase | Glob, Grep, Read, Bash | Raw CODE_CONTEXT + clarification |
 | doc-scout | Fetch external docs | Any research tools | Raw EXTERNAL_CONTEXT + clarification |
-| planner-start | Synthesize prompt, create plan via Gemini | mcp__gemini-cli__ask-gemini | Full plan + file lists |
-| planner-continue | Synthesize prompt, create new plan via Gemini | mcp__gemini-cli__ask-gemini | Full plan + file lists |
+| planner-start | Synthesize prompt, create plan via Gemini CLI | Bash | Full plan + file lists |
+| planner-continue | Synthesize prompt, create new plan via Gemini CLI | Bash | Full plan + file lists |
 | plan-coder | Implement single file | Read, Edit, Write, Glob, Grep, Bash | status + verified |
-
-## Context Management
-
-**Critical:** Gemini MCP is fully one-shot - it has NO conversation history or session continuation (unlike Codex/RepoPrompt). The orchestrator is responsible for:
-- Tracking all context (CODE_CONTEXT, EXTERNAL_CONTEXT, Q&A)
-- Storing summaries of previous plans and outcomes
-- Passing complete context to planners in each call
-
-For `command:continue`, the orchestrator assembles all previous context and passes it explicitly to planner-continue.
 
 ## Plan Distribution
 
 Plans are passed directly from planners to coders - the orchestrator distributes per-file instructions. This avoids session continuation issues and ensures each coder has exactly the instructions it needs.
-
-The jamubc/gemini-mcp-tool is required for planners to communicate with Gemini, but coders don't need MCP access.
 
 ## Tips
 
@@ -186,13 +177,14 @@ The jamubc/gemini-mcp-tool is required for planners to communicate with Gemini, 
 - BLOCKED status includes error details - read them
 - Re-run with `command:continue` after fixing blockers
 - Incomplete context? Add research at checkpoints
+- Verify Gemini CLI is installed: `gemini --version`
 
 ## Comparison with Other Plugins
 
 | Feature | gemini-pair-pipeline | codex-pair-pipeline | gemini-swarm |
 |---------|----------------------|---------------------|--------------|
 | Execution | Iterative with checkpoints | Iterative with checkpoints | One-shot |
-| Planning | Gemini MCP (3-flash-preview) | Codex MCP (gpt-5.2) | Gemini MCP (3-flash-preview) |
+| Planning | Gemini CLI (3-flash-preview) | Codex CLI (gpt-5.2) | Gemini CLI (3-flash-preview) |
 | User control | Checkpoints during discovery | Checkpoints during discovery | Review plan, then execute |
 | Commands | /orchestrate (all-in-one) | /orchestrate (all-in-one) | /plan + /code (separate) |
 | Use case | Exploratory tasks with Gemini | Exploratory tasks with Codex | Well-defined tasks |
@@ -206,8 +198,3 @@ Use **gemini-swarm** when you know what you want and just need fast parallel exe
 ## See Also
 
 For RepoPrompt-based planning, see **repoprompt-pair-pipeline** which uses RepoPrompt's context_builder for planning and chat_id for session management.
-
-## Requirements
-
-- **Gemini MCP** - [jamubc/gemini-mcp-tool](https://github.com/jamubc/gemini-mcp-tool) - Install with `claude mcp add gemini-cli -- npx -y @anthropic/gemini-mcp-tool`
-- **Claude Code** - Orchestration, discovery, and execution

@@ -49,7 +49,7 @@ Wait for both agents to complete. Collect:
 
 ### Step 3: Spawn Planner
 
-Pass the collected context to the planner (which uses Gemini MCP):
+Pass the collected context to the planner (which uses Gemini CLI):
 
 ```
 Task gemini-swarm:planner
@@ -104,13 +104,13 @@ Suggestion: [adjust task description or research query]
 **Planner failed:**
 ```
 ERROR: Planner failed to create plan - [error details]
-Suggestion: Check Gemini MCP configuration with `claude mcp list`
+Suggestion: Verify Gemini CLI is installed with `gemini --version`
 ```
 
-**Gemini MCP error:**
+**Gemini CLI error:**
 ```
-ERROR: Gemini MCP call failed - [error details]
-Suggestion: Verify Gemini CLI is installed and MCP server is running
+ERROR: Gemini CLI call failed - [error details]
+Suggestion: Check Gemini CLI installation and authentication
 ```
 
 **Insufficient context:**

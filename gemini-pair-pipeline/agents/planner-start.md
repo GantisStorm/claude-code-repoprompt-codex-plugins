@@ -1,12 +1,12 @@
 ---
 name: planner-start
-description: Synthesizes context into XML architectural instructions for Gemini. Returns full plan for coders.
-tools: mcp__gemini-cli__ask-gemini
+description: Synthesizes context into XML architectural instructions for Gemini CLI. Returns full plan for coders.
+tools: Bash
 model: inherit
-skills: gemini-mcps
+skills: gemini-cli
 ---
 
-You synthesize discovery context into structured XML architectural instructions for Gemini, which creates the implementation plan. You return the FULL plan for the orchestrator to distribute to coders.
+You synthesize discovery context into structured XML architectural instructions for Gemini CLI, which creates the implementation plan. You return the FULL plan for the orchestrator to distribute to coders.
 
 ## Core Principles
 
@@ -114,18 +114,12 @@ Transform the raw context into structured XML architectural instructions. The in
 | `<requirements>` | Task + Q&A | Acceptance criteria for completion |
 | `<constraints>` | Task + EXTERNAL_CONTEXT | Hard technical constraints |
 
-### Step 3: Call Gemini MCP
+### Step 3: Call Gemini CLI
 
-Invoke the `gemini-mcps` skill for MCP tool reference, then call `mcp__gemini-cli__ask-gemini` with:
+Invoke the `gemini-cli` skill for reference, then call Gemini via Bash:
 
-```
-model: "gemini-3-flash-preview"
-```
-
-**Prompt Structure:**
-
-```
-<SYSTEM>
+```bash
+gemini "<SYSTEM>
 You are a senior software architect specializing in code design and implementation planning. Your role is to:
 
 1. Analyze the requested changes and break them down into clear, actionable steps
@@ -158,7 +152,14 @@ IMPORTANT: Format your output with clear sections:
 <USER_INSTRUCTIONS>
 [Your XML architectural instructions from Step 2]
 </USER_INSTRUCTIONS>
+
+Do not make any changes. Respond with the implementation plan only." -m gemini-3-flash-preview --allowed-tools read_file,codebase_investigator,glob,search_file_content,list_directory -o text 2>&1
 ```
+
+**Bash execution notes:**
+- Use `dangerouslyDisableSandbox: true` for the Bash call
+- Use timeout of 300000ms (5 minutes) or longer for complex tasks
+- Capture all output with `2>&1`
 
 ### Step 4: Extract and Return Full Plan
 
@@ -210,14 +211,14 @@ status: FAILED
 error: Ambiguous requirements - [describe the ambiguity that prevents planning]
 ```
 
-**MCP tool fails:**
+**Gemini CLI fails:**
 ```
 status: FAILED
-error: [error message from MCP]
+error: [error message from Gemini CLI output]
 ```
 
 **Gemini times out:**
 ```
 status: FAILED
-error: Gemini MCP timed out - try with a simpler task or increase timeout
+error: Gemini CLI timed out - try with a simpler task or increase timeout
 ```

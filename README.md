@@ -38,7 +38,7 @@ A **pluggable multi-agent planning framework** for Claude Code. Swap planning en
 
 **The framework provides:**
 - **Shared agents**: code-scout, doc-scout, plan-coder (same implementation across plugins)
-- **Pluggable planners**: Swap between Claude, RepoPrompt MCP, Codex MCP, or Gemini MCP
+- **Pluggable planners**: Swap between Claude, RepoPrompt MCP, Codex CLI, or Gemini CLI
 - **Two execution patterns**: Pipeline (iterative) or Swarm (one-shot)
 
 ---
@@ -64,7 +64,7 @@ Different planning engines excel at different tasks. Rather than building four s
 - How context is synthesized into a plan (Narrative vs XML)
 - Where plans are stored (orchestrator memory vs MCP)
 - How plans reach coders (embedded in prompt vs MCP fetch)
-- MCP dependencies (none vs required)
+- External dependencies (none vs CLI vs MCP)
 
 ---
 
@@ -91,7 +91,7 @@ The framework offers **two execution patterns** that work with any planning engi
                                 ▼
                      ┌────────────────────┐
                      │      PLANNER       │
-                     │  (pluggable MCP)   │
+                     │    (pluggable)     │
                      └─────────┬──────────┘
                                │
                ┌───────────────┼───────────────┐
@@ -272,8 +272,8 @@ The key architectural difference is **how plans move from planner to coders**.
 | **Plan storage** | Orchestrator memory | Orchestrator memory | RepoPrompt MCP | Orchestrator memory |
 | **Plan delivery** | In prompt | In prompt | Via `chat_id` fetch | In prompt |
 | **Coders need MCP?** | No | No | Yes | No |
-| **Planning model** | Claude | gpt-5.2 | RepoPrompt context_builder | gemini-3-flash-preview |
-| **Session continuation** | Accumulated context | Accumulated context | `chat_id` | None (fully one-shot) |
+| **Planning model** | Claude | gpt-5.2 (via CLI) | RepoPrompt context_builder | gemini-3-flash-preview (via CLI) |
+| **Session continuation** | Accumulated context | Session ID | `chat_id` | Session index |
 
 ---
 
@@ -304,7 +304,7 @@ All four planning engines implement the **same meta framework**. This is what ma
 │   │  • Planner implementation (how context → plan)                      │   │
 │   │  • Plan format (Narrative vs XML)                                   │   │
 │   │  • Plan delivery (direct vs MCP fetch)                              │   │
-│   │  • MCP dependencies (none vs required)                              │   │
+│   │  • External dependencies (none vs CLI vs MCP)                       │   │
 │   └─────────────────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -322,12 +322,12 @@ All four planning engines implement the **same meta framework**. This is what ma
 - Implementation Notes, Ambiguities, Requirements, Constraints
 
 **Key Characteristics:**
-- No external MCP required - runs entirely within Claude Code
+- No external CLI or MCP required - runs entirely within Claude Code
 - Plans passed directly in prompt to coders
 - Best balance of simplicity and capability
 - Fastest iteration cycle
 
-**When to use:** Default choice for most tasks. Use when you want simplicity, have no MCP setup, or need rapid iteration.
+**When to use:** Default choice for most tasks. Use when you want simplicity, have no CLI/MCP setup, or need rapid iteration.
 
 ---
 
@@ -369,15 +369,15 @@ All four planning engines implement the **same meta framework**. This is what ma
 ```
 
 **Key Characteristics:**
-- Uses `gpt-5.2` model with `reasoningEffort: "high"`
+- Uses Codex CLI with `gpt-5.2` model and `model_reasoning_effort="high"`
 - Plans returned directly to orchestrator (not stored in MCP)
 - Coders receive instructions embedded in prompt
 - Strong architectural reasoning for complex problems
+- Session continuation via `codex resume`
 
-**MCP Configuration:**
-```
-model: "gpt-5.2"
-reasoningEffort: "high"
+**CLI Configuration:**
+```bash
+codex exec "prompt" -m gpt-5.2 --config model_reasoning_effort="high" --sandbox read-only --ask-for-approval never
 ```
 
 **When to use:** Difficult architectural problems, complex multi-step planning, or when you want a second opinion from a different model family.
@@ -396,15 +396,17 @@ reasoningEffort: "high"
 ```
 
 **Key Characteristics:**
-- Uses `gemini-3-flash-preview` model
-- **Fully one-shot** - NO conversation history or session continuation
-- Each planning call is completely independent
-- Orchestrator manages ALL context explicitly
+- Uses Gemini CLI with `gemini-3-flash-preview` model
+- Session continuation via `-r [index]` flag
 - Plans returned directly (not stored)
+- Fast execution with lower latency
 
-**Critical Difference:** Unlike other engines, Gemini has no memory between calls. The orchestrator must pass complete context every time. This makes it simpler but requires more explicit context management.
+**CLI Configuration:**
+```bash
+gemini "prompt" -m gemini-3-flash-preview -o text
+```
 
-**When to use:** Well-defined tasks where you don't need iterative refinement, or when you want fast planning with a different model perspective.
+**When to use:** Well-defined tasks where you want fast planning with Gemini's perspective, or when you need a different model family for comparison.
 
 ---
 
@@ -414,12 +416,12 @@ reasoningEffort: "high"
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                         DECISION TREE                                       │
 │                                                                             │
-│  Need external MCP?                                                         │
+│  Need external dependencies?                                                │
 │  ├─ No → Use pair-* (simplest, no dependencies)                             │
 │  └─ Yes → What do you need?                                                 │
-│           ├─ Intelligent file selection → repoprompt-*                      │
-│           ├─ High reasoning effort → codex-*                                │
-│           └─ Fast, stateless planning → gemini-*                            │
+│           ├─ Intelligent file selection → repoprompt-* (MCP)                │
+│           ├─ High reasoning effort → codex-* (CLI)                          │
+│           └─ Fast planning → gemini-* (CLI)                                 │
 │                                                                             │
 │  Task complexity?                                                           │
 │  ├─ Simple/well-defined → pair-* or gemini-* (fast)                         │
@@ -453,7 +455,7 @@ All plugins share the **same four agent types**. Only the planner implementation
 |-------|--------|--------------|---------|----------|
 | code-scout | Glob, Grep, Read, Bash | Glob, Grep, Read, Bash | Glob, Grep, Read, Bash | Glob, Grep, Read, Bash |
 | doc-scout | Research tools | Research tools | Research tools | Research tools |
-| planner | Read, Glob, Grep, Bash | `context_builder` / `chat_send` | `mcp__codex-cli__codex` | `mcp__gemini-cli__ask-gemini` |
+| planner | Read, Glob, Grep, Bash | `context_builder` / `chat_send` | Bash (codex CLI) | Bash (gemini CLI) |
 | plan-coder | Read, Edit, Write, Bash | + `mcp__RepoPrompt__chats` | Read, Edit, Write, Bash | Read, Edit, Write, Bash |
 
 ### Pipeline Agents
@@ -480,19 +482,19 @@ Pipeline plugins use specialized planner agents:
 ### Step 2: Install Plugins
 
 ```bash
-# Standalone (no MCP required)
+# Standalone (no dependencies)
 /plugin install pair-pipeline@claude-code-repoprompt-codex-plugins
 /plugin install pair-swarm@claude-code-repoprompt-codex-plugins
 
-# RepoPrompt planning
+# RepoPrompt planning (requires MCP)
 /plugin install repoprompt-pair-pipeline@claude-code-repoprompt-codex-plugins
 /plugin install repoprompt-swarm@claude-code-repoprompt-codex-plugins
 
-# Codex planning
+# Codex planning (requires CLI)
 /plugin install codex-pair-pipeline@claude-code-repoprompt-codex-plugins
 /plugin install codex-swarm@claude-code-repoprompt-codex-plugins
 
-# Gemini planning
+# Gemini planning (requires CLI)
 /plugin install gemini-pair-pipeline@claude-code-repoprompt-codex-plugins
 /plugin install gemini-swarm@claude-code-repoprompt-codex-plugins
 ```
@@ -565,36 +567,39 @@ Or enable in `.claude/settings.local.json`:
 - **Claude Code** - The CLI for orchestration and execution
 - **Node.js 18+** - For running Claude Code
 
-### MCP Requirements by Planning Engine
+### External Requirements by Planning Engine
 
-| Planning Engine | MCP Server | Setup |
-|-----------------|------------|-------|
+| Planning Engine | Requirement | Setup |
+|-----------------|-------------|-------|
 | pair-* (Claude) | None | No additional setup |
 | repoprompt-* | RepoPrompt MCP | [RepoPrompt App](https://repoprompt.com) |
-| codex-* | [tuannvm/codex-mcp-server](https://github.com/tuannvm/codex-mcp-server) | See below |
-| gemini-* | [jamubc/gemini-mcp-tool](https://github.com/jamubc/gemini-mcp-tool) | See below |
+| codex-* | Codex CLI | See below |
+| gemini-* | Gemini CLI | See below |
 
-#### Codex MCP Setup
-
-```bash
-# Prerequisites
-npm i -g @openai/codex  # or: brew install codex
-codex login --api-key "your-openai-api-key"
-
-# Install MCP server
-claude mcp add codex-cli -- npx -y codex-mcp-server
-```
-
-> **Note:** We use [tuannvm/codex-mcp-server](https://github.com/tuannvm/codex-mcp-server) instead of the official server due to a bug with conversation IDs ([Issue #3712](https://github.com/openai/codex/issues/3712)).
-
-#### Gemini MCP Setup
+#### Codex CLI Setup
 
 ```bash
-# Install MCP server
-claude mcp add gemini-cli -- npx -y @anthropic/gemini-mcp-tool
+# Install Codex CLI
+npm install -g @openai/codex
+# or: brew install codex
+
+# Authenticate
+codex login
+
+# Verify
+codex --version
 ```
 
-> **Note:** Gemini MCP is fully one-shot - it has NO conversation history or session continuation. The orchestrator manages all context and passes it explicitly to planners. Uses `gemini-3-flash-preview` model.
+#### Gemini CLI Setup
+
+```bash
+# Install Gemini CLI
+npm install -g @google/gemini-cli
+# or: brew install gemini-cli (macOS)
+
+# Verify
+gemini --version
+```
 
 ---
 
@@ -653,19 +658,19 @@ When a plan-coder returns BLOCKED:
 ├── codex-pair-pipeline/          # Codex planning + Pipeline
 │   ├── agents/                   # scouts, plan-coder, planners
 │   ├── commands/                 # orchestrate
-│   └── skills/                   # code-quality, codex-mcps
+│   └── skills/                   # code-quality, codex-cli
 ├── codex-swarm/                  # Codex planning + Swarm
 │   ├── agents/                   # scouts, plan-coder, planner
 │   ├── commands/                 # plan, code
-│   └── skills/                   # code-quality, codex-mcps
+│   └── skills/                   # code-quality, codex-cli
 ├── gemini-pair-pipeline/         # Gemini planning + Pipeline
 │   ├── agents/                   # scouts, plan-coder, planners
 │   ├── commands/                 # orchestrate
-│   └── skills/                   # code-quality, gemini-mcps
+│   └── skills/                   # code-quality, gemini-cli
 ├── gemini-swarm/                 # Gemini planning + Swarm
 │   ├── agents/                   # scouts, plan-coder, planner
 │   ├── commands/                 # plan, code
-│   └── skills/                   # code-quality, gemini-mcps
+│   └── skills/                   # code-quality, gemini-cli
 └── README.md
 ```
 
@@ -673,21 +678,24 @@ When a plan-coder returns BLOCKED:
 
 ## Troubleshooting
 
+### CLI Issues
+
+**Codex:**
+- Verify installation: `codex --version`
+- Check auth: `codex login`
+- Increase timeout for complex tasks (300000ms recommended)
+
+**Gemini:**
+- Verify installation: `gemini --version`
+- Check file access - Gemini can only read files in workspace directory
+- Rate limits: Free tier is 60/min, 1000/day
+
 ### MCP Connection Issues
 
 **RepoPrompt:**
 - Ensure RepoPrompt app is running
 - Check that your project is open in RepoPrompt
 - Verify MCP server status in RepoPrompt settings
-
-**Codex:**
-- Verify installation: `claude mcp list` should show `codex-cli`
-- Check auth: `codex login --api-key "your-key"`
-- Increase timeout for complex tasks (600000ms recommended)
-
-**Gemini:**
-- Verify installation: `claude mcp list` should show `gemini-cli`
-- Gemini is one-shot - no session history, context passed in each call
 
 ### Plugin Not Found
 

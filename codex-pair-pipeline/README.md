@@ -1,6 +1,6 @@
 # Codex Pair Pipeline
 
-Coordinates specialized agents to implement complex, multi-file coding tasks with Codex MCP using [tuannvm/codex-mcp-server](https://github.com/tuannvm/codex-mcp-server). Uses **iterative discovery** where users build context incrementally, then Codex creates detailed architectural plans using the Architect system prompt.
+Coordinates specialized agents to implement complex, multi-file coding tasks with Codex CLI. Uses **iterative discovery** where users build context incrementally, then Codex creates detailed architectural plans using the Architect system prompt.
 
 ## Quick Start
 
@@ -10,10 +10,12 @@ Coordinates specialized agents to implement complex, multi-file coding tasks wit
 
 # Install the plugin
 /plugin install codex-pair-pipeline@claude-code-repoprompt-codex-plugins
-
-# Install the Codex MCP server
-claude mcp add codex-cli -- npx -y codex-mcp-server
 ```
+
+## Requirements
+
+- **Codex CLI** - Install with `npm install -g @openai/codex` and authenticate via `codex login`
+- **Claude Code** - Orchestration, discovery, and execution
 
 ## Commands
 
@@ -51,7 +53,7 @@ The orchestrator spawns specialized agents via the `Task` tool:
 
 1. **Discovery** - code-scout gathers CODE_CONTEXT; doc-scout adds EXTERNAL_CONTEXT (spawned in parallel when `research:` is provided upfront, otherwise optional at checkpoint)
 2. **Checkpoints** - User answers clarifying questions, decides when context is complete
-3. **Planning** - Codex (using `gpt-5.2` model with high reasoning effort) receives Architect system prompt + CODE_CONTEXT + architectural narrative and creates detailed plan with per-file instructions
+3. **Planning** - Codex CLI (using `gpt-5.2` model with high reasoning effort) receives Architect system prompt + CODE_CONTEXT + architectural narrative and creates detailed plan with per-file instructions
 4. **Execution** - Coders receive plan directly and implement in parallel, verify with code-quality skill
 
 | Command | Discovery | Planning |
@@ -152,15 +154,13 @@ The orchestrator spawns specialized agents via the `Task` tool:
 |-------|---------|-------|--------|
 | code-scout | Investigate codebase | Glob, Grep, Read, Bash | Raw CODE_CONTEXT + clarification |
 | doc-scout | Fetch external docs | Any research tools | Raw EXTERNAL_CONTEXT + clarification |
-| planner-start | Synthesize prompt, create plan via Codex | mcp__codex-cli__codex | Full plan + file lists |
-| planner-continue | Synthesize prompt, create new plan via Codex | mcp__codex-cli__codex | Full plan + file lists |
+| planner-start | Synthesize prompt, create plan via Codex CLI | Bash | Full plan + file lists |
+| planner-continue | Synthesize prompt, create new plan via Codex CLI | Bash | Full plan + file lists |
 | plan-coder | Implement single file | Read, Edit, Write, Glob, Grep, Bash | status + verified |
 
 ## Plan Distribution
 
 Plans are passed directly from planners to coders - the orchestrator distributes per-file instructions. This avoids session continuation issues and ensures each coder has exactly the instructions it needs.
-
-The tuannvm/codex-mcp-server is still required for planners to communicate with Codex, but coders don't need MCP access.
 
 ## Tips
 
@@ -183,7 +183,7 @@ The tuannvm/codex-mcp-server is still required for planners to communicate with 
 | Feature | codex-pair-pipeline | gemini-pair-pipeline | codex-swarm |
 |---------|---------------------|----------------------|-------------|
 | Execution | Iterative with checkpoints | Iterative with checkpoints | One-shot |
-| Planning | Codex MCP (gpt-5.2) | Gemini MCP (3-flash-preview) | Codex MCP (gpt-5.2) |
+| Planning | Codex CLI (gpt-5.2) | Gemini MCP (3-flash-preview) | Codex CLI (gpt-5.2) |
 | User control | Checkpoints during discovery | Checkpoints during discovery | Review plan, then execute |
 | Commands | /orchestrate (all-in-one) | /orchestrate (all-in-one) | /plan + /code (separate) |
 | Use case | Exploratory tasks with Codex | Exploratory tasks with Gemini | Well-defined tasks |
@@ -197,8 +197,3 @@ Use **codex-swarm** when you know what you want and just need fast parallel exec
 ## See Also
 
 For RepoPrompt-based planning, see **repoprompt-pair-pipeline** which uses RepoPrompt's context_builder for planning and chat_id for session management.
-
-## Requirements
-
-- **Codex MCP** - [tuannvm/codex-mcp-server](https://github.com/tuannvm/codex-mcp-server) - Install with `claude mcp add codex-cli -- npx -y codex-mcp-server`
-- **Claude Code** - Orchestration, discovery, and execution

@@ -1,10 +1,10 @@
 ---
-description: One-shot parallel planning with Codex - scouts gather context, Codex creates implementation plan
+description: One-shot parallel planning with Codex CLI - scouts gather context, Codex creates implementation plan
 argument-hint: task: | research:
 allowed-tools: Task
 ---
 
-You are the Plan orchestrator. You spawn scouts in parallel, wait for results, then use Codex to create an implementation plan. No checkpoints, no loops - one-shot execution.
+You are the Plan orchestrator. You spawn scouts in parallel, wait for results, then use Codex CLI to create an implementation plan. No checkpoints, no loops - one-shot execution.
 
 ## Core Principles
 
@@ -49,14 +49,14 @@ Wait for both agents to complete. Collect:
 
 ### Step 3: Spawn Planner
 
-Pass the collected context to the planner (which uses Codex MCP):
+Pass the collected context to the planner (which uses Codex CLI):
 
 ```
 Task codex-swarm:planner
   prompt: "task: [task description] | code_context: [CODE_CONTEXT from scout] | external_context: [EXTERNAL_CONTEXT from scout]"
 ```
 
-The planner synthesizes the context into an architectural narrative prompt and sends it to Codex with the Architect system prompt.
+The planner synthesizes the context into an architectural narrative prompt and sends it to Codex CLI with the Architect system prompt.
 
 ### Step 4: Return Plan
 
@@ -104,13 +104,13 @@ Suggestion: [adjust task description or research query]
 **Planner failed:**
 ```
 ERROR: Planner failed to create plan - [error details]
-Suggestion: Check Codex MCP configuration with `claude mcp list`
+Suggestion: Verify Codex CLI is installed with `codex --version`
 ```
 
-**Codex MCP error:**
+**Codex CLI error:**
 ```
-ERROR: Codex MCP call failed - [error details]
-Suggestion: Verify Codex CLI is installed and MCP server is running
+ERROR: Codex CLI call failed - [error details]
+Suggestion: Verify Codex CLI is installed and authenticated
 ```
 
 **Insufficient context:**
