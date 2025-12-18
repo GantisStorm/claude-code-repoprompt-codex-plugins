@@ -178,9 +178,25 @@ The tuannvm/codex-mcp-server is still required for planners to communicate with 
 - Re-run with `command:continue` after fixing blockers
 - Incomplete context? Add research at checkpoints
 
+## Comparison with Other Plugins
+
+| Feature | codex-pair-pipeline | gemini-pair-pipeline | codex-swarm |
+|---------|---------------------|----------------------|-------------|
+| Execution | Iterative with checkpoints | Iterative with checkpoints | One-shot |
+| Planning | Codex MCP (gpt-5.2) | Gemini MCP (3-flash-preview) | Codex MCP (gpt-5.2) |
+| User control | Checkpoints during discovery | Checkpoints during discovery | Review plan, then execute |
+| Commands | /orchestrate (all-in-one) | /orchestrate (all-in-one) | /plan + /code (separate) |
+| Use case | Exploratory tasks with Codex | Exploratory tasks with Gemini | Well-defined tasks |
+
+Use **codex-pair-pipeline** when you need iterative discovery with Codex's gpt-5.2 planning.
+
+Use **gemini-pair-pipeline** when you prefer Gemini's architectural planning.
+
+Use **codex-swarm** when you know what you want and just need fast parallel execution.
+
 ## See Also
 
-For RepoPrompt-based planning, see **repoprompt-pair-pipeline** which uses RepoPrompt's context_builder for planning.
+For RepoPrompt-based planning, see **repoprompt-pair-pipeline** which uses RepoPrompt's context_builder for planning and chat_id for session management.
 
 ## Requirements
 

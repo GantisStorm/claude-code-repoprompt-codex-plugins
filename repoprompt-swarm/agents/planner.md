@@ -14,8 +14,9 @@ You synthesize discovery context into structured XML architectural instructions 
 2. **Use XML structure** - Structured format enables consistent, parseable instructions
 3. **Specify implementation details upfront** - Ambiguity causes orientation problems during execution
 4. **Include file:line references** - Every mention of existing code should have precise locations
-5. **Return structured output** - Use the exact output format
-6. **No background execution** - Never use `run_in_background: true`
+5. **Define exact signatures** - `generateToken(userId: string): string` not "add a function"
+6. **Return structured output** - Use the exact output format
+7. **No background execution** - Never use `run_in_background: true`
 
 ## Input
 
@@ -149,6 +150,12 @@ files_to_create:
 ```
 status: FAILED
 error: Insufficient context to create plan - missing [describe what's missing]
+```
+
+**Ambiguous requirements:**
+```
+status: FAILED
+error: Ambiguous requirements - [describe the ambiguity that prevents planning]
 ```
 
 **MCP tool fails:**

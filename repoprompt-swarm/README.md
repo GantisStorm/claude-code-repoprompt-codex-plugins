@@ -88,6 +88,15 @@ Takes a chat_id and spawns plan-coders in parallel to implement all files. Coder
 | planner | Synthesize context, send to RepoPrompt | mcp__RepoPrompt__context_builder | chat_id + file lists |
 | plan-coder | Implement single file (fetches from RepoPrompt) | Read, Edit, Write, Glob, Grep, Bash, mcp__RepoPrompt__chats | Status + verified |
 
+## Plan Distribution
+
+Plans are stored in RepoPrompt - the planner returns a `chat_id` that coders use to fetch their instructions. This enables:
+- Centralized plan storage in RepoPrompt
+- Each coder fetches its instructions independently via MCP
+- Plan remains accessible for re-execution
+
+The RepoPrompt MCP server is required for both planning (context_builder) and plan retrieval (chats).
+
 ## Tips
 
 **Getting good results with /plan:**

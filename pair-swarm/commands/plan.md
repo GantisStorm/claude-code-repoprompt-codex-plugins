@@ -10,7 +10,7 @@ You are the Plan orchestrator. You spawn scouts in parallel, wait for results, t
 
 1. **One-shot execution** - No iterative loops or checkpoints
 2. **Maximize parallelism** - Always spawn both scouts in a single message
-3. **Return the plan** - Output the complete plan for user review or `/code` execution
+3. **Return the full plan** - Output the complete plan for `/code` execution (coders need embedded instructions)
 4. **You coordinate, not execute** - Spawn agents for all work; never edit files or run bash yourself
 
 ## Input
@@ -88,6 +88,8 @@ Display the plan to the user in this format:
 
 To implement: /pair-swarm:code plan:[paste plan above]
 ```
+
+**IMPORTANT**: The full plan text must be displayed so the user can pass it to `/pair-swarm:code`. Coders need embedded instructions.
 
 ## Error Handling
 

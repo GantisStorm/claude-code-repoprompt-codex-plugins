@@ -202,9 +202,26 @@ The orchestrator spawns specialized agents via the `Task` tool:
 - Re-run with `command:continue` after fixing blockers
 - Incomplete context? Add research at checkpoints
 
+## Comparison with Other Plugins
+
+| Feature | repoprompt-pair-pipeline | codex-pair-pipeline | repoprompt-swarm |
+|---------|--------------------------|---------------------|------------------|
+| Execution | Iterative with checkpoints | Iterative with checkpoints | One-shot |
+| Planning | RepoPrompt MCP | Codex MCP (gpt-5.2) | RepoPrompt MCP |
+| User control | Checkpoints during discovery | Checkpoints during discovery | Review plan, then execute |
+| Commands | /orchestrate (all-in-one) | /orchestrate (all-in-one) | /plan + /code (separate) |
+| Use case | Exploratory tasks with RepoPrompt | Exploratory tasks with Codex | Well-defined tasks |
+| Session | chat_id based continuation | Direct plan passing | chat_id based |
+
+Use **repoprompt-pair-pipeline** when you need iterative discovery with RepoPrompt's context management.
+
+Use **codex-pair-pipeline** when you prefer Codex's gpt-5.2 with high reasoning effort.
+
+Use **repoprompt-swarm** when you know what you want and just need fast parallel execution.
+
 ## See Also
 
-For a simpler pipeline without RepoPrompt dependency, see **pair-pipeline** which uses full discovery with checkpoints but fast planning (no MCP required).
+For a simpler pipeline without RepoPrompt dependency, see **pair-pipeline** which uses full discovery with checkpoints but direct planning (no MCP required).
 
 ## Requirements
 

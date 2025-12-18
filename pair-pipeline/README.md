@@ -144,6 +144,12 @@ The orchestrator spawns specialized agents via the `Task` tool:
 | planner-continue | Create implementation plan (continue mode) | Read, Glob, Grep, Bash | file lists + instructions |
 | plan-coder | Implement single file | Read, Edit, Write, Glob, Grep, Bash | status + verified |
 
+## Plan Distribution
+
+Plans are embedded directly in the orchestrator's output - coders receive their per-file instructions directly. This avoids any external dependencies and ensures each coder has exactly the instructions it needs.
+
+For `command:continue`, the accumulated context (CODE_CONTEXT, EXTERNAL_CONTEXT, Q&A) is preserved and passed to the planner.
+
 ## Tips
 
 **Getting good results:**
@@ -161,18 +167,25 @@ The orchestrator spawns specialized agents via the `Task` tool:
 - Re-run with `command:continue` after fixing blockers
 - Incomplete context? Add research at checkpoints
 
-## Comparison with repoprompt-pair-pipeline
+## Comparison with Other Plugins
 
-| Feature | pair-pipeline | repoprompt-pair-pipeline |
-|---------|--------------|--------------------------|
-| Discovery | Full loop with checkpoints | Full loop with checkpoints |
-| Planning | Direct | Via RepoPrompt MCP |
-| Resume | Uses accumulated context | Uses MCP chat_id |
-| Dependencies | None | RepoPrompt MCP server |
+| Feature | pair-pipeline | codex-pair-pipeline | pair-swarm |
+|---------|---------------|---------------------|------------|
+| Execution | Iterative with checkpoints | Iterative with checkpoints | One-shot |
+| Planning | Direct (no MCP) | Codex MCP (gpt-5.2) | Direct (no MCP) |
+| User control | Checkpoints during discovery | Checkpoints during discovery | Review plan, then execute |
+| Commands | /orchestrate (all-in-one) | /orchestrate (all-in-one) | /plan + /code (separate) |
+| Use case | Exploratory tasks, no MCP | Exploratory tasks with Codex | Well-defined tasks |
 
 Use **pair-pipeline** for standalone operation with no external dependencies.
 
-Use **repoprompt-pair-pipeline** when you have RepoPrompt MCP server for planning and context management.
+Use **codex-pair-pipeline** when you want Codex's gpt-5.2 architectural planning with iterative discovery.
+
+Use **pair-swarm** when you know what you want and just need fast parallel execution.
+
+## See Also
+
+For RepoPrompt-based planning, see **repoprompt-pair-pipeline** which uses RepoPrompt's context_builder for planning and chat_id for session management.
 
 ## Requirements
 

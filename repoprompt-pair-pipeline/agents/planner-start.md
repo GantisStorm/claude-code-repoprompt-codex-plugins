@@ -35,7 +35,7 @@ Extract from the provided context:
 
 ### Step 2: Synthesize Architectural Instructions (Narrative)
 
-Transform the raw context into a structured narrative covering these categories. The instructions must be detailed enough that RepoPrompt can create a plan with minimal ambiguity.
+Transform the raw context into a structured narrative. The instructions must be detailed enough that RepoPrompt can create a plan with minimal ambiguity.
 
 **Why details matter**: Product requirements describe WHAT but not HOW. Implementation details left ambiguous cause orientation problems during execution.
 
@@ -82,6 +82,12 @@ List specific acceptance criteria - the plan is complete when ALL are satisfied:
 - Technical constraints or specifications
 - Specific behaviors that must be implemented
 
+#### Constraints
+List hard technical constraints that MUST be followed:
+- Explicit type requirements, file paths, naming conventions
+- Specific APIs, URLs, parameters to use
+- Patterns or approaches that are required or forbidden
+
 ### Step 3: Call RepoPrompt MCP
 
 Invoke the `repoprompt-mcps` skill for MCP tool reference, then call `mcp__RepoPrompt__context_builder` with:
@@ -119,6 +125,12 @@ files_to_create:
 ```
 status: FAILED
 error: Insufficient context to create plan - missing [describe what's missing]
+```
+
+**Ambiguous requirements:**
+```
+status: FAILED
+error: Ambiguous requirements - [describe the ambiguity that prevents planning]
 ```
 
 **MCP tool fails:**

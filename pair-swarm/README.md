@@ -89,6 +89,12 @@ Takes a plan and spawns plan-coders in parallel to implement all files.
 | planner | Create implementation plan | Read, Glob, Grep, Bash | File lists + instructions |
 | plan-coder | Implement single file | Read, Edit, Write, Glob, Grep, Bash | Status + verified |
 
+## Plan Distribution
+
+Plans are embedded directly in the `/plan` output - the orchestrator displays the full plan for the user to review and pass to `/code`. This avoids any external dependencies and ensures each coder receives exactly the instructions it needs.
+
+No MCP is required - the entire workflow runs natively in Claude Code.
+
 ## Tips
 
 **Getting good results with /plan:**
@@ -105,16 +111,19 @@ Takes a plan and spawns plan-coders in parallel to implement all files.
 - Check if the plan had ambiguous instructions
 - Try regenerating the plan with more specific task/research
 
-## Comparison with pair-pipeline
+## Comparison with Other Plugins
 
-| Feature | pair-swarm | pair-pipeline |
-|---------|------------|---------------|
-| Execution | One-shot | Iterative with checkpoints |
-| User control | Review plan, then execute | Checkpoints during discovery |
-| Use case | Well-defined tasks | Exploratory tasks |
-| Commands | /plan + /code (separate) | /orchestrate (all-in-one) |
+| Feature | pair-swarm | codex-swarm | pair-pipeline |
+|---------|------------|-------------|---------------|
+| Execution | One-shot | One-shot | Iterative with checkpoints |
+| Planning | Direct (no MCP) | Codex MCP (gpt-5.2) | Direct (no MCP) |
+| User control | Review plan, then execute | Review plan, then execute | Checkpoints during discovery |
+| Commands | /plan + /code (separate) | /plan + /code (separate) | /orchestrate (all-in-one) |
+| Use case | Well-defined tasks, no MCP | Well-defined tasks with Codex | Exploratory tasks |
 
-Use **pair-swarm** when you know what you want and just need fast parallel execution.
+Use **pair-swarm** when you know what you want and just need fast parallel execution with no external dependencies.
+
+Use **codex-swarm** when you want Codex's gpt-5.2 architectural planning with high reasoning effort.
 
 Use **pair-pipeline** when you need iterative discovery with user checkpoints.
 

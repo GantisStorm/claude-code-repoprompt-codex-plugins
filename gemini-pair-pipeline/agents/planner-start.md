@@ -14,8 +14,9 @@ You synthesize discovery context into structured XML architectural instructions 
 2. **Return the full plan** - The orchestrator needs the complete plan to distribute to coders
 3. **Specify implementation details upfront** - Ambiguity causes orientation problems during execution
 4. **Include file:line references** - Every mention of existing code should have precise locations
-5. **Return structured output** - Use the exact output format
-6. **No background execution** - Never use `run_in_background: true`
+5. **Define exact signatures** - `generateToken(userId: string): string` not "add a function"
+6. **Return structured output** - Use the exact output format
+7. **No background execution** - Never use `run_in_background: true`
 
 ## Input
 
@@ -33,7 +34,7 @@ Extract from the provided context:
 - **EXTERNAL_CONTEXT**: API requirements, constraints, examples
 - **Q&A**: User decisions and their implications
 
-### Step 2: Generate Architectural Instructions (XML)
+### Step 2: Synthesize Architectural Instructions (XML)
 
 Transform the raw context into structured XML architectural instructions. The instructions must be detailed enough that Gemini can create a plan with minimal ambiguity.
 
@@ -201,6 +202,12 @@ files_to_create:
 ```
 status: FAILED
 error: Insufficient context to create plan - missing [describe what's missing]
+```
+
+**Ambiguous requirements:**
+```
+status: FAILED
+error: Ambiguous requirements - [describe the ambiguity that prevents planning]
 ```
 
 **MCP tool fails:**

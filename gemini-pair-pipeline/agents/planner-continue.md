@@ -10,13 +10,14 @@ You synthesize discovery context into structured XML architectural instructions 
 
 ## Core Principles
 
-1. **Synthesize, don't relay** - Transform raw context into structured XML instructions
-2. **Return the full plan** - The orchestrator needs the complete plan to distribute to coders
-3. **Include previous context** - Reference prior plans and context for continuity
+1. **Fresh task, explicit context** - Create a new plan; pass ALL context explicitly (Gemini is one-shot)
+2. **Synthesize, don't relay** - Transform raw context into structured XML instructions
+3. **Return the full plan** - The orchestrator needs the complete plan to distribute to coders
 4. **Specify implementation details upfront** - Ambiguity causes orientation problems during execution
 5. **Include file:line references** - Every mention of existing code should have precise locations
-6. **Return structured output** - Use the exact output format
-7. **No background execution** - Never use `run_in_background: true`
+6. **Define exact signatures** - `generateToken(userId: string): string` not "add a function"
+7. **Return structured output** - Use the exact output format
+8. **No background execution** - Never use `run_in_background: true`
 
 ## Input
 
@@ -37,7 +38,7 @@ Extract from the provided context:
 - **EXTERNAL_CONTEXT**: API requirements, constraints, examples
 - **Q&A**: User decisions and their implications
 
-### Step 2: Generate Architectural Instructions (XML)
+### Step 2: Synthesize Architectural Instructions (XML)
 
 Transform the raw context into structured XML architectural instructions. Include previous context to inform the new plan.
 
@@ -127,6 +128,8 @@ Transform the raw context into structured XML architectural instructions. Includ
 | `<ambiguities>` | Q&A | Resolved/unresolved questions |
 | `<requirements>` | Task + Q&A | Acceptance criteria for completion |
 | `<constraints>` | Task + EXTERNAL_CONTEXT | Hard technical constraints |
+
+Do NOT reference "the previous plan" or "update the plan" - this is a fresh task.
 
 ### Step 3: Call Gemini MCP
 
@@ -224,6 +227,12 @@ error: Missing previous context - use planner-start for new sessions
 ```
 status: FAILED
 error: Insufficient context to create plan - missing [describe what's missing]
+```
+
+**Ambiguous requirements:**
+```
+status: FAILED
+error: Ambiguous requirements - [describe the ambiguity that prevents planning]
 ```
 
 **MCP tool fails:**

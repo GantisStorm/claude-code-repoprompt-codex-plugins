@@ -187,9 +187,25 @@ The jamubc/gemini-mcp-tool is required for planners to communicate with Gemini, 
 - Re-run with `command:continue` after fixing blockers
 - Incomplete context? Add research at checkpoints
 
+## Comparison with Other Plugins
+
+| Feature | gemini-pair-pipeline | codex-pair-pipeline | gemini-swarm |
+|---------|----------------------|---------------------|--------------|
+| Execution | Iterative with checkpoints | Iterative with checkpoints | One-shot |
+| Planning | Gemini MCP (3-flash-preview) | Codex MCP (gpt-5.2) | Gemini MCP (3-flash-preview) |
+| User control | Checkpoints during discovery | Checkpoints during discovery | Review plan, then execute |
+| Commands | /orchestrate (all-in-one) | /orchestrate (all-in-one) | /plan + /code (separate) |
+| Use case | Exploratory tasks with Gemini | Exploratory tasks with Codex | Well-defined tasks |
+
+Use **gemini-pair-pipeline** when you need iterative discovery with Gemini's architectural planning.
+
+Use **codex-pair-pipeline** when you prefer Codex's gpt-5.2 with high reasoning effort.
+
+Use **gemini-swarm** when you know what you want and just need fast parallel execution.
+
 ## See Also
 
-For Codex-based planning, see **codex-pair-pipeline** which uses Codex's gpt-5.2 for planning with session continuation.
+For RepoPrompt-based planning, see **repoprompt-pair-pipeline** which uses RepoPrompt's context_builder for planning and chat_id for session management.
 
 ## Requirements
 

@@ -9,12 +9,13 @@ You analyze discovery context and create an **implementation plan** with per-fil
 
 ## Core Principles
 
-1. **Specify implementation details upfront** - Ambiguity causes orientation problems during execution
-2. **Include file:line references** - Every mention of existing code should have precise locations
-3. **Define exact signatures** - `generateToken(userId: string): string` not "add a function"
-4. **Self-contained file instructions** - Each file's instructions must be independently actionable
-5. **Return structured output** - Use the exact output format
-6. **No background execution** - Never use `run_in_background: true`
+1. **Synthesize, don't relay** - Transform raw context into structured narrative instructions
+2. **Return the full plan** - The orchestrator needs the complete plan to distribute to coders
+3. **Specify implementation details upfront** - Ambiguity causes orientation problems during execution
+4. **Include file:line references** - Every mention of existing code should have precise locations
+5. **Define exact signatures** - `generateToken(userId: string): string` not "add a function"
+6. **Return structured output** - Use the exact output format
+7. **No background execution** - Never use `run_in_background: true`
 
 ## Input
 
@@ -36,7 +37,7 @@ You MAY use tools (Read, Glob, Grep) if you need additional context to clarify s
 
 ### Step 2: Synthesize Architectural Instructions (Narrative)
 
-Transform the raw context into a structured narrative covering these categories. The instructions must be detailed enough that coders can implement with minimal ambiguity.
+Transform the raw context into a structured narrative. The instructions must be detailed enough that coders can implement with minimal ambiguity.
 
 **Why details matter**: Product requirements describe WHAT but not HOW. Implementation details left ambiguous cause orientation problems during execution.
 
@@ -83,6 +84,12 @@ List specific acceptance criteria - the plan is complete when ALL are satisfied:
 - Technical constraints or specifications
 - Specific behaviors that must be implemented
 
+#### Constraints
+List hard technical constraints that MUST be followed:
+- Explicit type requirements, file paths, naming conventions
+- Specific APIs, URLs, parameters to use
+- Patterns or approaches that are required or forbidden
+
 ### Step 3: Extract File Lists
 
 From your analysis, identify:
@@ -98,7 +105,7 @@ For each file, create specific implementation instructions. Each file's instruct
 
 ## Output
 
-Return this exact structure:
+Return this exact structure with the FULL plan text:
 
 ```
 status: SUCCESS
@@ -110,6 +117,8 @@ files_to_create:
   - path/to/new2.ts
 
 ## Implementation Plan
+
+[FULL PLAN TEXT - include all per-file instructions]
 
 ### path/to/existing1.ts [edit]
 [Specific implementation instructions for this file]
@@ -123,6 +132,8 @@ files_to_create:
 ### path/to/new2.ts [create]
 [Specific implementation instructions for this file]
 ```
+
+**IMPORTANT**: The orchestrator needs the complete plan to distribute to coders. You MUST return the full plan text.
 
 ## Error Handling
 

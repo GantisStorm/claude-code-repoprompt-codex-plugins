@@ -33,24 +33,25 @@ The plan should contain:
 Extract from the plan:
 1. **files_to_edit** - Files marked with `[edit]` action
 2. **files_to_create** - Files marked with `[create]` action
-3. **Per-file instructions** - The content under each `### [filename] [action]` header
 
 ### Step 2: Spawn Coders in Parallel
 
 **IMPORTANT**: Spawn ALL coders in a single message with multiple Task calls.
 
-For each file in the plan, extract its instructions and pass them directly:
+Send the FULL plan to each coder. Each coder parses the plan to find its file's instructions:
 
 ```
 Task codex-swarm:plan-coder
-  prompt: "target_file: [path1] | action: edit | plan: [instructions for path1]"
+  prompt: "target_file: [path1] | action: edit | plan: [FULL PLAN]"
 
 Task codex-swarm:plan-coder
-  prompt: "target_file: [path2] | action: edit | plan: [instructions for path2]"
+  prompt: "target_file: [path2] | action: edit | plan: [FULL PLAN]"
 
 Task codex-swarm:plan-coder
-  prompt: "target_file: [path3] | action: create | plan: [instructions for path3]"
+  prompt: "target_file: [path3] | action: create | plan: [FULL PLAN]"
 ```
+
+Pass the complete plan to each coder. Do not extract or parse per-file instructions - coders handle their own parsing.
 
 **Action mapping:**
 - Files marked `[edit]` -> `action: edit`
