@@ -161,11 +161,20 @@ Do not make any changes. Respond with the implementation plan only." -m gpt-5.2 
 - Use timeout of 300000ms (5 minutes) or longer for complex tasks
 - Capture all output with `2>&1`
 
-### Step 4: Extract and Return Full Plan
+### Step 4: Return Plan Verbatim
 
-Parse the Codex response and return the FULL plan text. Extract file lists from the plan.
+Extract the file lists from the Codex response, then return the plan text EXACTLY as Codex wrote it.
 
-Look for:
+**CRITICAL: Do not modify the plan text.**
+- Copy the entire plan output from Codex verbatim
+- Preserve all markdown formatting (`###`, `**`, backticks, etc.)
+- Keep all whitespace, bullets, and structure intact
+- Do not summarize, paraphrase, or reformat
+- Do not convert relative paths to absolute paths
+
+The coders depend on exact formatting to parse their sections using `### [filename] [action]` headers.
+
+**Extract file lists by looking for:**
 - **Files to edit**: Files mentioned with "modify", "update", "change", "edit", or marked `[edit]`
 - **Files to create**: Files mentioned with "create", "add new", "new file", or marked `[create]`
 

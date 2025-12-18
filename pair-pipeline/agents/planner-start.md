@@ -103,6 +103,14 @@ For each file, create specific implementation instructions. Each file's instruct
 - **Actionable**: Clear steps, not vague guidance
 - **Precise**: Exact locations, signatures, and logic
 
+**CRITICAL: Use proper markdown formatting.**
+- Use `### path/to/file.ts [edit]` or `### path/to/file.ts [create]` headers exactly
+- Use `**bold**` for emphasis on goals, sections, and key terms
+- Use backticks for code references, function names, and file paths
+- Use bullet lists for steps and details
+
+The coders depend on exact `### [filename] [action]` headers to parse their sections.
+
 ## Output
 
 Return this exact structure with the FULL plan text:
