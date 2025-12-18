@@ -153,7 +153,7 @@ IMPORTANT: Format your output with clear sections:
 [Your XML architectural instructions from Step 2]
 </USER_INSTRUCTIONS>
 
-Do not make any changes. Respond with the implementation plan only." -m gpt-5.2 --config model_reasoning_effort="high" --sandbox read-only --ask-for-approval never 2>&1
+Do not make any changes. Respond with the implementation plan only." -m gpt-5.2-codex --reasoning-effort high --sandbox read-only --ask-for-approval never 2>&1
 ```
 
 **Bash execution notes:**
