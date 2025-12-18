@@ -43,6 +43,18 @@
       "source": "./codex-swarm",
       "description": "One-shot swarm commands with Codex MCP planning. Scouts gather context in parallel, planner synthesizes XML architectural instructions for Codex (gpt-5.2), parallel coders execute. No iterative loops - fast parallel execution.",
       "version": "1.6.0"
+    },
+    {
+      "name": "gemini-pair-pipeline",
+      "source": "./gemini-pair-pipeline",
+      "description": "Multi-agent orchestration for complex coding tasks with Gemini MCP (jamubc/gemini-mcp-tool). Scouts gather raw context, planners synthesize XML architectural instructions for gemini-3-flash-preview. Returns full plan with per-file instructions. Iterative discovery with user checkpoints and parallel execution. Orchestrator manages all context (Gemini is fully one-shot).",
+      "version": "1.0.0"
+    },
+    {
+      "name": "gemini-swarm",
+      "source": "./gemini-swarm",
+      "description": "One-shot swarm commands with Gemini MCP planning (jamubc/gemini-mcp-tool). Scouts gather context in parallel, planner synthesizes XML architectural instructions for Gemini (gemini-3-flash-preview), parallel coders execute. No iterative loops - fast parallel execution. Gemini is fully one-shot with no session history.",
+      "version": "1.0.0"
     }
   ]
 }
