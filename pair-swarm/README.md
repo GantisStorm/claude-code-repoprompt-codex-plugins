@@ -16,7 +16,7 @@ One-shot swarm commands for planning and coding. No iterative loops or checkpoin
 
 ### /plan - Create Implementation Plan
 
-Spawns code-scout and doc-scout in parallel, then creates an implementation plan.
+Spawns code-scout and doc-scout as background tasks (parallel), then creates an implementation plan. Uses `TaskOutput` to retrieve results.
 
 ```bash
 /pair-swarm:plan task:Add user authentication with JWT tokens | research:JWT best practices Node.js
@@ -30,7 +30,7 @@ Spawns code-scout and doc-scout in parallel, then creates an implementation plan
 
 ### /code - Execute Implementation Plan
 
-Takes a plan and spawns plan-coders in parallel to implement all files.
+Takes a plan and spawns plan-coders as background tasks (parallel). Uses `TaskOutput` to collect results from all coders.
 
 ```bash
 /pair-swarm:code plan:[paste plan from /plan output]

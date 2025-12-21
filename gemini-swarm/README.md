@@ -21,7 +21,7 @@ One-shot swarm commands with Gemini CLI planning. No iterative loops or checkpoi
 
 ### /plan - Create Implementation Plan via Gemini
 
-Spawns code-scout and doc-scout in parallel, then uses Gemini CLI with the Architect system prompt to create an implementation plan.
+Spawns code-scout and doc-scout as background tasks (parallel), then uses Gemini CLI with the Architect system prompt to create an implementation plan. Uses `TaskOutput` to retrieve results.
 
 ```bash
 /gemini-swarm:plan task:Add user authentication with JWT tokens | research:JWT best practices Node.js
@@ -35,7 +35,7 @@ Spawns code-scout and doc-scout in parallel, then uses Gemini CLI with the Archi
 
 ### /code - Execute Implementation Plan
 
-Takes the plan from `/plan` and spawns plan-coders in parallel to implement all files. Each coder receives its instructions directly.
+Takes the plan from `/plan` and spawns plan-coders as background tasks (parallel). Uses `TaskOutput` to collect results. Each coder receives its instructions directly.
 
 ```bash
 /gemini-swarm:code plan:[paste plan from /plan output]

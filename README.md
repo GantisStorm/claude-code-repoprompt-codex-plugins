@@ -438,6 +438,66 @@ gemini "prompt" -m gemini-3-flash-preview -o text
 
 ## Architecture
 
+### Background Agent Execution
+
+All agents run as **background tasks** for maximum efficiency. The orchestrator spawns agents with `run_in_background: true` and retrieves results via `TaskOutput`.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      BACKGROUND AGENT PATTERN                                │
+│                                                                             │
+│  Orchestrator spawns agents in background:                                  │
+│                                                                             │
+│    Task [agent-name]                                                        │
+│      prompt: "..."                                                          │
+│      run_in_background: true                                                │
+│                                                                             │
+│  Then retrieves results when ready:                                         │
+│                                                                             │
+│    TaskOutput task_id: [agent-id]                                           │
+│                                                                             │
+│  Benefits:                                                                  │
+│  • Parallel execution - multiple agents run simultaneously                  │
+│  • Non-blocking - orchestrator can continue other work                      │
+│  • Efficient resource usage - agents don't block the main thread            │
+│  • Better visibility - agent progress visible in task list                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Parallel spawning example (scouts):**
+```
+Task code-scout
+  prompt: "task: Add auth | mode: informational"
+  run_in_background: true
+
+Task doc-scout
+  prompt: "query: JWT best practices"
+  run_in_background: true
+
+# Both run simultaneously, then:
+TaskOutput task_id: [code-scout-id]
+TaskOutput task_id: [doc-scout-id]
+```
+
+**Parallel spawning example (coders):**
+```
+Task plan-coder (file1)
+  run_in_background: true
+
+Task plan-coder (file2)
+  run_in_background: true
+
+Task plan-coder (file3)
+  run_in_background: true
+
+# All implement in parallel, then collect results:
+TaskOutput task_id: [coder-1-id]
+TaskOutput task_id: [coder-2-id]
+TaskOutput task_id: [coder-3-id]
+```
+
+---
+
 ### Agent Architecture
 
 All plugins share the **same four agent types**. Only the planner implementation differs.

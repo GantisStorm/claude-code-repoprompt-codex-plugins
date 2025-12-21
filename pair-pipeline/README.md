@@ -43,12 +43,17 @@ Discovery loop using accumulated context from previous run.
 
 ## How It Works
 
-The orchestrator spawns specialized agents via the `Task` tool:
+The orchestrator spawns specialized agents via the `Task` tool with `run_in_background: true`, then retrieves results via `TaskOutput`:
 
 1. **Discovery** - code-scout gathers CODE_CONTEXT; doc-scout adds EXTERNAL_CONTEXT (spawned in parallel when `research:` is provided upfront, otherwise optional at checkpoint)
 2. **Checkpoints** - User answers clarifying questions, decides when context is complete
 3. **Planning** - planner-start creates implementation plan with per-file instructions
-4. **Execution** - plan-coders implement in parallel, verify with code-quality skill
+4. **Execution** - plan-coders run in parallel as background tasks, results collected via TaskOutput
+
+**Background execution pattern:**
+- Agents spawn with `run_in_background: true`
+- Orchestrator uses `TaskOutput task_id: [agent-id]` to retrieve results
+- Enables true parallel execution of scouts and coders
 
 **Flow:** code-scout -> checkpoints -> optional doc-scout -> planner-start (or planner-continue) -> plan-coder -> review
 

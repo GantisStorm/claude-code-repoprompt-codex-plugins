@@ -16,7 +16,7 @@ One-shot swarm commands with RepoPrompt planning. No iterative loops or checkpoi
 
 ### /plan - Create Implementation Plan via RepoPrompt
 
-Spawns code-scout and doc-scout in parallel, then uses RepoPrompt to create an implementation plan.
+Spawns code-scout and doc-scout as background tasks (parallel), then uses RepoPrompt to create an implementation plan. Uses `TaskOutput` to retrieve results.
 
 ```bash
 /repoprompt-swarm:plan task:Add user authentication with JWT tokens | research:JWT best practices Node.js
@@ -30,7 +30,7 @@ Spawns code-scout and doc-scout in parallel, then uses RepoPrompt to create an i
 
 ### /code - Execute RepoPrompt Plan
 
-Takes a chat_id and spawns plan-coders in parallel to implement all files. Coders fetch their instructions from RepoPrompt.
+Takes a chat_id and spawns plan-coders as background tasks (parallel). Uses `TaskOutput` to collect results. Coders fetch their instructions from RepoPrompt.
 
 ```bash
 /repoprompt-swarm:code chat_id:[chat_id from /plan output]

@@ -54,12 +54,17 @@ Execute an existing RepoPrompt plan by chat ID.
 
 ## How It Works
 
-The orchestrator spawns specialized agents via the `Task` tool:
+The orchestrator spawns specialized agents via the `Task` tool with `run_in_background: true`, then retrieves results via `TaskOutput`:
 
 1. **Discovery** - code-scout gathers CODE_CONTEXT; doc-scout adds EXTERNAL_CONTEXT (spawned in parallel when `research:` is provided upfront, otherwise optional at checkpoint)
 2. **Checkpoints** - User answers clarifying questions, decides when context is complete
 3. **Planning** - RepoPrompt receives XML architectural instructions and creates detailed plan
-4. **Execution** - Coders implement in parallel, verify with code-quality skill
+4. **Execution** - Coders run in parallel as background tasks, results collected via TaskOutput
+
+**Background execution pattern:**
+- Agents spawn with `run_in_background: true`
+- Orchestrator uses `TaskOutput task_id: [agent-id]` to retrieve results
+- Enables true parallel execution of scouts and coders
 
 | Command | Discovery | Planning |
 |---------|-----------|----------|
