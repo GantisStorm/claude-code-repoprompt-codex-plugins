@@ -79,11 +79,12 @@ The framework offers **two execution patterns** that work with any planning engi
 │                       ITERATIVE DISCOVERY LOOP                         │
 │                                                                        │
 │  code-scout ───► CHECKPOINT ───► doc-scout ───► CHECKPOINT ───► ...    │
-│       │               │               │               │                │
-│       │          User decides    User decides    User decides          │
-│       │         "Add research"   "Add more"      "Complete"            │
-│       │               │               │               │                │
-│       └───────────────┴───────────────┴───────────────┘                │
+│  (background)         │         (background)         │                 │
+│       │          User decides         │         User decides           │
+│       ▼         "Add research"        ▼        "Complete"              │
+│  TaskOutput           │          TaskOutput          │                 │
+│       │               │               │              │                 │
+│       └───────────────┴───────────────┴──────────────┘                 │
 │                               │                                        │
 │                       context_package                                  │
 └───────────────────────────────┼────────────────────────────────────────┘
@@ -97,9 +98,14 @@ The framework offers **two execution patterns** that work with any planning engi
                ┌───────────────┼───────────────┐
                ▼               ▼               ▼
         ┌────────────┐  ┌────────────┐  ┌────────────┐
-        │ plan-coder │  │ plan-coder │  │ plan-coder │  (parallel)
+        │ plan-coder │  │ plan-coder │  │ plan-coder │  (background)
         │   file1    │  │   file2    │  │   file3    │
-        └────────────┘  └────────────┘  └────────────┘
+        └──────┬─────┘  └──────┬─────┘  └──────┬─────┘
+               │               │               │
+               └───────────────┼───────────────┘
+                               ▼
+                          TaskOutput
+                        (collect all)
 ```
 
 **Characteristics:**
@@ -124,10 +130,14 @@ The framework offers **two execution patterns** that work with any planning engi
 │                    ▼                               ▼                    │
 │              ┌───────────┐                   ┌───────────┐              │
 │              │code-scout │                   │ doc-scout │              │
-│              │(codebase) │                   │(external) │              │
+│              │(background│                   │(background│              │
 │              └─────┬─────┘                   └─────┬─────┘              │
 │                    │           (parallel)          │                    │
 │                    └───────────────┬───────────────┘                    │
+│                                    ▼                                    │
+│                               TaskOutput                                │
+│                            (collect both)                               │
+│                                    │                                    │
 │                                    ▼                                    │
 │                          ┌─────────────────┐                            │
 │                          │     PLANNER     │                            │
@@ -151,9 +161,14 @@ The framework offers **two execution patterns** that work with any planning engi
 │              ┌──────────┐   ┌──────────┐   ┌──────────┐                 │
 │              │plan-coder│   │plan-coder│   │plan-coder│                 │
 │              │  file1   │   │  file2   │   │  file3   │                 │
+│              │(backgrnd)│   │(backgrnd)│   │(backgrnd)│                 │
 │              └────┬─────┘   └────┬─────┘   └────┬─────┘                 │
 │                   │    (parallel)│              │                       │
 │                   └──────────────┼──────────────┘                       │
+│                                  ▼                                      │
+│                             TaskOutput                                  │
+│                           (collect all)                                 │
+│                                  │                                      │
 │                                  ▼                                      │
 │                           RESULTS TABLE                                 │
 │                    (file | status | summary)                            │
