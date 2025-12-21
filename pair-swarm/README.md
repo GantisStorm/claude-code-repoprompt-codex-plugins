@@ -54,22 +54,29 @@ Takes a plan and spawns plan-coders as background tasks (parallel). Uses `TaskOu
              │                                  │
              ▼                                  ▼
      ┌───────┴───────┐                  ┌───────┴───────┐
-     │               │                  │               │
+     │  BACKGROUND   │                  │  BACKGROUND   │
+     │    SPAWN      │                  │    SPAWN      │
      ▼               ▼                  ▼               ▼
 ┌──────────┐  ┌──────────┐        ┌──────────┐  ┌──────────┐
 │code-scout│  │doc-scout │        │plan-coder│  │plan-coder│
-└────┬─────┘  └────┬─────┘        │  file1   │  │  file2   │
-     │             │              └────┬─────┘  └────┬─────┘
-     ▼             ▼                   │             │
- CODE_CONTEXT  EXTERNAL_               ▼             ▼
-     │         CONTEXT              COMPLETE      COMPLETE
-     └──────┬──────┘                   │             │
-            │                          └──────┬──────┘
-            ▼                                 │
-     ┌───────────┐                            ▼
-     │  planner  │                    ┌───────────────┐
-     └─────┬─────┘                    │ Results Table │
-           │                          └───────────────┘
+│run_in_   │  │run_in_   │        │  file1   │  │  file2   │
+│background│  │background│        │run_in_   │  │run_in_   │
+│  :true   │  │  :true   │        │background│  │background│
+└────┬─────┘  └────┬─────┘        └────┬─────┘  └────┬─────┘
+     │             │                   │             │
+     ▼             ▼                   ▼             ▼
+┌─────────────────────┐          ┌─────────────────────┐
+│    TaskOutput       │          │    TaskOutput       │
+│  (collect results)  │          │  (collect results)  │
+└──────────┬──────────┘          └──────────┬──────────┘
+           │                                │
+ CODE_CONTEXT + EXTERNAL_CONTEXT    COMPLETE + COMPLETE
+           │                                │
+           ▼                                ▼
+     ┌───────────┐                  ┌───────────────┐
+     │  planner  │                  │ Results Table │
+     └─────┬─────┘                  └───────────────┘
+           │
            ▼
    ┌────────────────┐
    │ IMPLEMENTATION │

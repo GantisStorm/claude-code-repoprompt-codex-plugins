@@ -59,25 +59,32 @@ Takes the plan from `/plan` and spawns plan-coders as background tasks (parallel
              │                                  │
              ▼                                  ▼
      ┌───────┴───────┐                  ┌───────┴───────┐
-     │               │                  │               │
+     │  BACKGROUND   │                  │  BACKGROUND   │
+     │    SPAWN      │                  │    SPAWN      │
      ▼               ▼                  ▼               ▼
 ┌──────────┐  ┌──────────┐        ┌──────────┐  ┌──────────┐
 │code-scout│  │doc-scout │        │plan-coder│  │plan-coder│
-└────┬─────┘  └────┬─────┘        │  file1   │  │  file2   │
-     │             │              │(receives │  │(receives │
-     ▼             ▼              │ plan     │  │ plan     │
- CODE_CONTEXT  EXTERNAL_          │ directly)│  │ directly)│
-     │         CONTEXT            └────┬─────┘  └────┬─────┘
-     └──────┬──────┘                   │             │
-            │                          ▼             ▼
-            ▼                       COMPLETE      COMPLETE
-     ┌───────────┐                     │             │
-     │  planner  │                     └──────┬──────┘
-     │  (Codex   │                            │
-     │  gpt-5.2) │                            ▼
-     └─────┬─────┘                    ┌───────────────┐
-           │                          │ Results Table │
-           ▼                          └───────────────┘
+│run_in_   │  │run_in_   │        │  file1   │  │  file2   │
+│background│  │background│        │run_in_   │  │run_in_   │
+│  :true   │  │  :true   │        │background│  │background│
+└────┬─────┘  └────┬─────┘        └────┬─────┘  └────┬─────┘
+     │             │                   │             │
+     ▼             ▼                   ▼             ▼
+┌─────────────────────┐          ┌─────────────────────┐
+│    TaskOutput       │          │    TaskOutput       │
+│  (collect results)  │          │  (collect results)  │
+└──────────┬──────────┘          └──────────┬──────────┘
+           │                                │
+ CODE_CONTEXT + EXTERNAL_CONTEXT    COMPLETE + COMPLETE
+           │                                │
+           ▼                                ▼
+     ┌───────────┐                  ┌───────────────┐
+     │  planner  │                  │ Results Table │
+     │  (Codex   │                  └───────────────┘
+     │  gpt-5.2) │
+     └─────┬─────┘
+           │
+           ▼
    ┌────────────────┐
    │   FULL PLAN    │
    │  + file lists  │

@@ -54,24 +54,31 @@ Takes a chat_id and spawns plan-coders as background tasks (parallel). Uses `Tas
              │                                  │
              ▼                                  ▼
      ┌───────┴───────┐                  ┌───────┴───────┐
-     │               │                  │               │
+     │  BACKGROUND   │                  │  BACKGROUND   │
+     │    SPAWN      │                  │    SPAWN      │
      ▼               ▼                  ▼               ▼
 ┌──────────┐  ┌──────────┐        ┌──────────┐  ┌──────────┐
 │code-scout│  │doc-scout │        │plan-coder│  │plan-coder│
-└────┬─────┘  └────┬─────┘        │  file1   │  │  file2   │
-     │             │              │(fetches  │  │(fetches  │
-     ▼             ▼              │ from RP) │  │ from RP) │
- CODE_CONTEXT  EXTERNAL_          └────┬─────┘  └────┬─────┘
-     │         CONTEXT                 │             │
-     └──────┬──────┘                   ▼             ▼
-            │                       COMPLETE      COMPLETE
-            ▼                          │             │
-     ┌───────────┐                     └──────┬──────┘
-     │  planner  │                            │
-     │  (uses    │                            ▼
-     │ RepoPrompt│                    ┌───────────────┐
-     └─────┬─────┘                    │ Results Table │
-           │                          └───────────────┘
+│run_in_   │  │run_in_   │        │  file1   │  │  file2   │
+│background│  │background│        │(fetches  │  │(fetches  │
+│  :true   │  │  :true   │        │ from RP) │  │ from RP) │
+└────┬─────┘  └────┬─────┘        │run_in_   │  │run_in_   │
+     │             │              │background│  │background│
+     ▼             ▼              └────┬─────┘  └────┬─────┘
+┌─────────────────────┐                │             │
+│    TaskOutput       │                ▼             ▼
+│  (collect results)  │          ┌─────────────────────┐
+└──────────┬──────────┘          │    TaskOutput       │
+           │                     │  (collect results)  │
+ CODE_CONTEXT + EXTERNAL_CONTEXT └──────────┬──────────┘
+           │                                │
+           ▼                        COMPLETE + COMPLETE
+     ┌───────────┐                          │
+     │  planner  │                          ▼
+     │  (uses    │                  ┌───────────────┐
+     │ RepoPrompt│                  │ Results Table │
+     └─────┬─────┘                  └───────────────┘
+           │
            ▼
    ┌────────────────┐
    │    CHAT_ID     │

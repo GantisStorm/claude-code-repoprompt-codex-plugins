@@ -74,9 +74,12 @@ The orchestrator spawns specialized agents via the `Task` tool with `run_in_back
 │              (Human-in-the-loop control)                │
 │                                                         │
 │  ┌─────────────────┐                                    │
-│  │   code-scout    │                                    │
+│  │   code-scout    │  ◄── run_in_background: true       │
 │  └────────┬────────┘                                    │
 │           │                                             │
+│  ┌────────┴────────┐                                    │
+│  │   TaskOutput    │  ◄── collect results               │
+│  └────────┬────────┘                                    │
 │           │ CODE_CONTEXT                                │
 │           ▼                                             │
 │  ┌─────────────────┐                                    │
@@ -91,9 +94,11 @@ The orchestrator spawns specialized agents via the `Task` tool with `run_in_back
 │      │         │                                        │
 │      ▼         │                                        │
 │  ┌─────────┐   │                                        │
-│  │doc-scout│   │                                        │
+│  │doc-scout│   │  ◄── run_in_background: true           │
 │  └────┬────┘   │                                        │
-│       │        │                                        │
+│  ┌────┴────┐   │                                        │
+│  │TaskOutput   │                                        │
+│  └────┬────┘   │                                        │
 │       │ EXTERNAL_CONTEXT                                │
 │       ▼        │                                        │
 │  ┌─────────────────┐                                    │
@@ -118,25 +123,33 @@ The orchestrator spawns specialized agents via the `Task` tool with `run_in_back
          │
          │ file_lists + per-file plan
          ▼
-┌─────────────────┐
-│   plan-coder    │
-│    (1/file)     │
-│                 │
-│ Input:          │
-│  target_file    │
-│  action         │
-│  plan (embedded)│
-└────────┬────────┘
-         │
-         │ status: COMPLETE/BLOCKED
-         ▼
-┌─────────────────┐
-│  ORCHESTRATOR   │
-│ Phase 3 Review  │
-│                 │
-│ Collects results│
-│ Reports to user │
-└─────────────────┘
+┌───────────────────────────────────────────────────────┐
+│              PARALLEL BACKGROUND CODERS               │
+│                                                       │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐     │
+│  │ plan-coder  │ │ plan-coder  │ │ plan-coder  │     │
+│  │   file 1    │ │   file 2    │ │   file 3    │     │
+│  │run_in_back- │ │run_in_back- │ │run_in_back- │     │
+│  │ground: true │ │ground: true │ │ground: true │     │
+│  └──────┬──────┘ └──────┬──────┘ └──────┬──────┘     │
+│         │               │               │             │
+│         └───────────────┼───────────────┘             │
+│                         ▼                             │
+│               ┌─────────────────┐                     │
+│               │   TaskOutput    │                     │
+│               │ (collect all)   │                     │
+│               └─────────────────┘                     │
+└───────────────────────┬───────────────────────────────┘
+                        │
+                        │ status: COMPLETE/BLOCKED
+                        ▼
+              ┌─────────────────┐
+              │  ORCHESTRATOR   │
+              │ Phase 3 Review  │
+              │                 │
+              │ Collects results│
+              │ Reports to user │
+              └─────────────────┘
 ```
 
 ## Agents

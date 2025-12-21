@@ -90,7 +90,10 @@ The orchestrator spawns specialized agents via the `Task` tool with `run_in_back
 │                    (Human-in-the-loop control)                      │    │
 │                                                                     │    │
 │  ┌─────────────────┐                                                │    │
-│  │   code-scout    │                                                │    │
+│  │   code-scout    │  ◄── run_in_background: true                   │    │
+│  └────────┬────────┘                                                │    │
+│  ┌────────┴────────┐                                                │    │
+│  │   TaskOutput    │  ◄── collect results                           │    │
 │  └────────┬────────┘                                                │    │
 │           │ CODE_CONTEXT                                            │    │
 │           ▼                                                         │    │
@@ -104,9 +107,11 @@ The orchestrator spawns specialized agents via the `Task` tool with `run_in_back
 │      ┌────┴────┐                             │                      │    │
 │      ▼         ▼                             │                      │    │
 │  ┌─────────┐  "Complete"                     │                      │    │
-│  │doc-scout│      │                     (loop back)                 │    │
+│  │doc-scout│      │  ◄── run_in_background   │                      │    │
+│  └────┬────┘      │                     (loop back)                 │    │
+│  ┌────┴────┐      │                          │                      │    │
+│  │TaskOutput      │                          │                      │    │
 │  └────┬────┘      │                          │                      │    │
-│       │           │                          │                      │    │
 │       │ EXTERNAL  │                          │                      │    │
 │       │ _CONTEXT  │                          │                      │    │
 │       ▼           │                          │                      │    │
@@ -153,18 +158,29 @@ The orchestrator spawns specialized agents via the `Task` tool with `run_in_back
                          └─────────────────────────┬───────────────────────┘
                                                    │
                                                    ▼
-                                    ┌───────────────────────────┐
-                                    │       plan-coder(s)       │
-                                    │        (parallel)         │
-                                    │                           │
-                                    │  Each coder:              │
-                                    │  - Receives chat_id       │
-                                    │  - Fetches plan via MCP   │
-                                    │  - Implements target_file │
-                                    └─────────────┬─────────────┘
-                                                  │
-                                                  │ status: COMPLETE/BLOCKED
-                                                  ▼
+                        ┌───────────────────────────────────────────────────────┐
+                        │              PARALLEL BACKGROUND CODERS               │
+                        │                                                       │
+                        │  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐     │
+                        │  │ plan-coder  │ │ plan-coder  │ │ plan-coder  │     │
+                        │  │   file 1    │ │   file 2    │ │   file 3    │     │
+                        │  │run_in_back- │ │run_in_back- │ │run_in_back- │     │
+                        │  │ground: true │ │ground: true │ │ground: true │     │
+                        │  │             │ │             │ │             │     │
+                        │  │ Fetches plan│ │ Fetches plan│ │ Fetches plan│     │
+                        │  │ via MCP     │ │ via MCP     │ │ via MCP     │     │
+                        │  └──────┬──────┘ └──────┬──────┘ └──────┬──────┘     │
+                        │         │               │               │             │
+                        │         └───────────────┼───────────────┘             │
+                        │                         ▼                             │
+                        │               ┌─────────────────┐                     │
+                        │               │   TaskOutput    │                     │
+                        │               │ (collect all)   │                     │
+                        │               └─────────────────┘                     │
+                        └───────────────────────┬───────────────────────────────┘
+                                                │
+                                                │ status: COMPLETE/BLOCKED
+                                                ▼
                                     ┌───────────────────────────┐
                                     │  ORCHESTRATOR Review      │
                                     │                           │
